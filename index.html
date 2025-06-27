@@ -1,366 +1,517 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track and Manage - DHL</title>
+    <title>Sales Heroes (Offline)</title>
+    <!-- Подключение Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключение шрифта Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDKs - Classic Import -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Иконки Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .dhl-brand { background-color: #FFCC00; color: #D40511; }
-        .btn-dhl { background-color: #FFCC00; color: #333; font-weight: 700; transition: background-color 0.3s; }
-        .btn-dhl:hover { background-color: #e6b800; }
-        .btn-admin { background-color: #D40511; color: white; font-weight: 700; transition: background-color 0.3s; }
-        .btn-admin:hover:not(:disabled) { background-color: #a8040d; }
-        .btn-admin:disabled { background-color: #f87171; cursor: not-allowed; }
-        .footer-link { @apply text-gray-600 hover:text-red-600 transition-colors duration-200; }
-        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .points-popup {
+            position: absolute; bottom: 110%; left: 50%;
+            transform: translateX(-50%); padding: 4px 12px;
+            border-radius: 9999px; font-weight: bold; color: white;
+            animation: floatUp 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes floatUp {
+            from { opacity: 1; transform: translate(-50%, 0); }
+            to { opacity: 0; transform: translate(-50%, -60px); }
+        }
+        .tab-active { background-color: #4f46e5; color: white; }
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            animation: fadeIn 0.3s ease, slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px) scale(0.95); }
+            to { transform: translateY(0) scale(1); }
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4">
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm">
-        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="dhl-brand px-3 py-1 text-3xl font-extrabold tracking-tighter rounded">DHL</div>
-            <div class="hidden md:flex space-x-6 items-center">
-                <a href="https://www.dhl.com/global-en/home/our-divisions/express.html" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-red-600 font-medium">Express</a>
-                <a href="https://www.dhl.com/global-en/home/our-divisions.html" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-red-600 font-medium">Logistics</a>
-                <a href="https://www.dhl.com/global-en/home/contact-us.html" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-red-600 font-medium">Support</a>
+    <!-- Экраны приложения -->
+    <div id="loading-screen" class="text-center">
+        <h1 class="text-3xl font-bold text-indigo-400">Sales Heroes</h1>
+        <p class="text-slate-400 mt-2">Загрузка данных...</p>
+    </div>
+
+    <div id="create-profile-screen" class="hidden bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700 fade-in">
+        <h1 class="text-3xl font-bold text-center mb-2 text-indigo-400">Вход или регистрация</h1>
+        <p class="text-center text-slate-400 mb-6">Введите 'Admin' для входа в админ-панель</p>
+        <form id="profile-form" class="space-y-4">
+            <div>
+                <label for="nickname" class="block mb-2 text-sm font-medium text-slate-300">Ваш никнейм</label>
+                <input type="text" id="nickname" name="nickname" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5" placeholder="SuperManager или Admin" required>
             </div>
-        </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
-        <!-- Client Tracking Section -->
-        <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Track Your Shipment</h1>
-            <p class="text-gray-500 mb-6">Enter your personal tracking number.</p>
-            <div class="space-y-4">
-                <textarea id="trackingIdInput" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition" placeholder="e.g., PETROV777MSK"></textarea>
-                <button id="trackPackageBtn" class="w-full btn-dhl py-3 rounded-lg text-lg">Track</button>
+            <div>
+                <label for="team" class="block mb-2 text-sm font-medium text-slate-300">Выберите команду (если вы новый игрок)</label>
+                <select id="team" name="team" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                    <option value="" disabled selected>-- Ваша команда --</option>
+                    <option value="Альфа">Команда "Альфа"</option>
+                    <option value="Браво">Команда "Браво"</option>
+                    <option value="Чарли">Команда "Чарли"</option>
+                    <option value="Дельта">Команда "Дельта"</option>
+                </select>
             </div>
-            <div id="statusContainer" class="mt-8"></div>
-        </div>
+            <button type="submit" id="submit-button" class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-500 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors duration-300">Войти / Создать</button>
+        </form>
+    </div>
 
-        <!-- Admin Panel Section - Hidden by default -->
-        <div id="adminPanel" class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-12 border-t-4 border-red-600 hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Admin Panel: Create Parcel</h2>
-            <div id="adminMessageContainer" class="p-3 rounded-lg mb-4 text-center border-l-4 hidden"></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div id="app-container" class="hidden w-full max-w-4xl mx-auto fade-in">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6">
+            <div class="flex justify-between items-start mb-6">
                 <div>
-                    <label for="newTrackingId" class="block text-sm font-medium text-gray-700">Tracking Code</label>
-                    <input type="text" id="newTrackingId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                    <h1 id="user-nickname" class="text-3xl font-bold text-white"></h1>
+                    <div class="flex items-center mt-1">
+                        <p id="user-team" class="text-indigo-400 font-medium"></p>
+                        <p id="user-title" class="ml-4 text-amber-400 font-semibold text-sm bg-amber-400/10 px-2 py-0.5 rounded"></p>
+                    </div>
                 </div>
-                <div>
-                    <label for="clientName" class="block text-sm font-medium text-gray-700">Client's Full Name</label>
-                    <input type="text" id="clientName" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
-                </div>
-                <div class="md:col-span-2">
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <input type="text" id="status" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" value="In transit">
-                </div>
-                <div class="md:col-span-2">
-                    <label for="details" class="block text-sm font-medium text-gray-700">Additional Information</label>
-                    <textarea id="details" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" placeholder="e.g., Weight: 2.5 kg, Route: Moscow - St. Petersburg"></textarea>
-                </div>
-            </div>
-            <div class="mt-6">
-                <button id="createPackageBtn" class="w-full btn-admin py-3 rounded-lg text-lg flex justify-center items-center">
-                    <span id="createBtnText">Create Record</span>
-                    <svg id="createBtnSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="mt-8 border-t pt-6">
-                <h3 class="text-xl font-semibold text-gray-700 mb-3">Recently Created Parcels</h3>
-                <div id="recentParcelsContainer">
-                     <p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Connecting to the database...</p>
+                 <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                         <p class="text-sm text-slate-400">Баланс</p>
+                         <p id="header-balance" class="text-lg font-bold text-green-400 flex items-center">
+                            <ion-icon name="cash-outline" class="mr-1"></ion-icon>
+                            <span></span>
+                        </p>
+                    </div>
+                    <button id="logout-button" class="bg-slate-700 hover:bg-red-600 hover:text-white text-slate-300 font-bold py-2 px-3 rounded-lg transition-colors">Выйти</button>
                 </div>
             </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-16">
-        <!-- Top Footer Section -->
-        <div class="container mx-auto px-6 py-12">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <!-- Quick Links -->
-                <div>
-                    <h3 class="font-bold text-red-700 mb-4">Quick Links</h3>
-                    <ul class="space-y-3">
-                        <li><a href="https://www.dhl.com/global-en/home/contact-us.html" target="_blank" rel="noopener noreferrer" class="footer-link">Customer Service</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/login.html" target="_blank" rel="noopener noreferrer" class="footer-link">Customer Portal Logins</a></li>
-                        <li><a href="#" class="footer-link">Strategic Partner Directory</a></li>
-                        <li><a href="https://developer.dhl.com/" target="_blank" rel="noopener noreferrer" class="footer-link">Developer Portal</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/get-a-quote.html" target="_blank" rel="noopener noreferrer" class="footer-link">Get a Quote</a></li>
-                        <li><a href="#" class="footer-link">Request a Business Account</a></li>
-                        <li><a href="#" class="footer-link">DHL for Your Business</a></li>
-                    </ul>
+            <div class="mb-6">
+                <div id="tabs-container" class="flex bg-slate-700 rounded-lg p-1">
+                    <button id="tab-feed" class="w-full py-2 rounded-md text-sm font-medium transition-colors">Лента</button>
+                    <button id="tab-dashboard" class="w-full py-2 rounded-md text-sm font-medium transition-colors">Панель</button>
+                    <button id="tab-ratings" class="w-full py-2 rounded-md text-sm font-medium transition-colors">Рейтинги</button>
+                    <button id="tab-shop" class="w-full py-2 rounded-md text-sm font-medium transition-colors">Магазин</button>
+                    <button id="tab-admin" class="hidden w-full py-2 rounded-md text-sm font-medium transition-colors">Админ</button>
                 </div>
-                <!-- Our Divisions -->
-                <div>
-                    <h3 class="font-bold text-red-700 mb-4">Our Divisions</h3>
-                    <ul class="space-y-3">
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/express.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL Express</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/global-forwarding.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL Global Forwarding</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL Supply Chain</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/ecommerce.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL eCommerce</a></li>
-                        <li><a href="#" class="footer-link">Other Global Divisions</a></li>
-                    </ul>
+            </div>
+            <!-- Контент вкладок -->
+            <div id="feed-content" class="hidden">
+                 <h2 class="text-xl font-bold mb-4 text-center">Лента событий</h2>
+                 <ul id="event-feed-list" class="space-y-3 max-h-[450px] overflow-y-auto pr-2"></ul>
+            </div>
+            <div id="dashboard-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center">
+                    <div class="bg-slate-700/50 p-4 rounded-xl"><p class="text-sm text-slate-400">Ранг</p><p id="user-rank" class="text-2xl font-semibold text-white"></p></div>
+                    <div class="bg-slate-700/50 p-4 rounded-xl"><p class="text-sm text-slate-400">Баланс</p><p id="user-balance" class="text-2xl font-semibold text-green-400"></p></div>
+                    <div class="bg-slate-700/50 p-4 rounded-xl"><p class="text-sm text-slate-400">Всего очков</p><p id="user-total-points" class="text-2xl font-semibold text-white"></p></div>
                 </div>
-                <!-- Industry Sectors -->
-                <div>
-                    <h3 class="font-bold text-red-700 mb-4">Industry Sectors</h3>
-                    <ul class="space-y-3">
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/automotive.html" target="_blank" rel="noopener noreferrer" class="footer-link">Auto-Mobility</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/global-forwarding/energy.html" target="_blank" rel="noopener noreferrer" class="footer-link">Energy</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/engineering-manufacturing.html" target="_blank" rel="noopener noreferrer" class="footer-link">Engineering and Manufacturing</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/life-sciences-healthcare.html" target="_blank" rel="noopener noreferrer" class="footer-link">Life Sciences and Healthcare</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/retail.html" target="_blank" rel="noopener noreferrer" class="footer-link">Retail and Fashion</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/technology.html" target="_blank" rel="noopener noreferrer" class="footer-link">Technology</a></li>
-                    </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button id="add-zalog" class="relative bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-lg text-lg transition-transform hover:scale-105">Закрыть Залог <span class="block text-sm opacity-80">+100 очков</span></button>
+                    <button id="add-pochta" class="relative bg-sky-600 hover:bg-sky-700 text-white font-bold py-4 px-4 rounded-lg text-lg transition-transform hover:scale-105">Почтовые сборы <span class="block text-sm opacity-80">+20 очков</span></button>
                 </div>
-                <!-- Company Information -->
-                <div>
-                    <h3 class="font-bold text-red-700 mb-4">Company Information</h3>
-                    <ul class="space-y-3">
-                        <li><a href="https://www.dhl.com/global-en/home/about-us.html" target="_blank" rel="noopener noreferrer" class="footer-link">About DHL</a></li>
-                        <li><a href="#" class="footer-link">Delivered Magazine</a></li>
-                        <li><a href="https://careers.dhl.com/" target="_blank" rel="noopener noreferrer" class="footer-link">Careers</a></li>
-                        <li><a href="https://group.dhl.com/en/media-relations/press-releases.html" target="_blank" rel="noopener noreferrer" class="footer-link">Press Center</a></li>
-                        <li><a href="https://www.dpdhl.com/en/investors.html" target="_blank" rel="noopener noreferrer" class="footer-link">Investors</a></li>
-                        <li><a href="https://www.dhl.com/global-en/home/about-us/sustainability.html" target="_blank" rel="noopener noreferrer" class="footer-link">Sustainability</a></li>
-                        <li><a href="#" class="footer-link">Supplier Diversity</a></li>
-                        <li><a href="#" class="footer-link">Innovation</a></li>
-                        <li><a href="#" class="footer-link">Events</a></li>
-                        <li><a href="#" class="footer-link">Brand Partnerships</a></li>
-                    </ul>
+            </div>
+            <div id="ratings-content" class="hidden">
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div><h2 class="text-xl font-bold mb-4 text-center">Личный рейтинг</h2><ul id="personal-rating-list" class="space-y-2 max-h-96 overflow-y-auto pr-2"></ul></div>
+                    <div><h2 class="text-xl font-bold mb-4 text-center">Командный рейтинг</h2><ul id="team-rating-list" class="space-y-3"></ul></div>
+                 </div>
+            </div>
+            <div id="shop-content" class="hidden">
+                <h2 class="text-xl font-bold mb-4 text-center">Магазин призов</h2>
+                <div id="shop-items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div id="admin-content" class="hidden">
+                <h2 class="text-xl font-bold mb-4 text-center">Панель Администратора</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Управление магазином -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Управление магазином</h3>
+                        <div id="admin-shop-list" class="space-y-2 mb-4"></div>
+                        <form id="add-item-form" class="bg-slate-700/50 p-4 rounded-lg space-y-3">
+                             <h4 class="font-semibold">Добавить новый товар</h4>
+                             <input type="text" id="item-name" placeholder="Название" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg w-full p-2.5" required>
+                             <input type="text" id="item-desc" placeholder="Описание" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg w-full p-2.5" required>
+                             <input type="number" id="item-price" placeholder="Цена" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg w-full p-2.5" required>
+                             <input type="text" id="item-icon" placeholder="Иконка (напр. cafe-outline)" class="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg w-full p-2.5">
+                             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg py-2">Добавить товар</button>
+                        </form>
+                    </div>
+                    <!-- Управление пользователями и игрой -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Управление пользователями</h3>
+                        <div id="admin-user-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                         <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-3">Управление игрой</h3>
+                            <button id="reset-game-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Сбросить всю игру</button>
+                            <p class="text-xs text-slate-400 mt-2">ВНИМАНИЕ: Это действие удалит всех пользователей и их прогресс без возможности восстановления.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Bottom Footer Section -->
-        <div class="bg-gray-100">
-            <div class="container mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600 space-y-4 md:space-y-0">
-                <div>
-                    <p class="mb-2">2025 &copy; - all rights reserved</p>
-                </div>
-                <div class="flex flex-wrap justify-center space-x-4">
-                     <a href="https://www.dhl.com/global-en/home/footer/fraud-awareness.html" target="_blank" rel="noopener noreferrer" class="footer-link">Fraud Awareness</a>
-                     <a href="https://www.dhl.com/global-en/home/footer/legal-notice.html" target="_blank" rel="noopener noreferrer" class="footer-link">Legal Notice</a>
-                     <a href="https://www.dhl.com/global-en/home/footer/terms-of-use.html" target="_blank" rel="noopener noreferrer" class="footer-link">Terms of Use</a>
-                     <a href="https://www.dhl.com/global-en/home/footer/privacy-notice.html" target="_blank" rel="noopener noreferrer" class="footer-link">Privacy Notice</a>
-                     <a href="#" class="footer-link">Dispute Resolution</a>
-                     <a href="#" class="footer-link">Additional Information</a>
-                     <a href="#" class="footer-link">Cookie Settings</a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="font-semibold hidden sm:inline">Follow Us</span>
-                    <a href="https://www.youtube.com/user/dhl" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="text-gray-500 hover:text-red-600">
-                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10,15L15.19,12L10,9V15M21.56,7.17C21.69,7.64 21.78,8.27 21.84,9.07C21.91,9.87 21.94,10.56 21.94,11.16L22,12C22,14.19 21.84,15.8 21.56,16.83C21.31,17.73 20.73,18.31 19.83,18.56C19.36,18.69 18.73,18.78 17.93,18.84C17.13,18.91 16.44,18.94 15.84,18.94L15,19C12.81,19 11.2,18.84 10.17,18.56C9.27,18.31 8.69,17.73 8.44,16.83C8.31,16.36 8.22,15.73 8.16,14.93C8.09,14.13 8.06,13.44 8.06,12.84L8,12C8,9.81 8.16,8.2 8.44,7.17C8.69,6.27 9.27,5.69 10.17,5.44C10.64,5.31 11.27,5.22 12.07,5.16C12.87,5.09 13.56,5.06 14.16,5.06L15,5C17.19,5 18.8,5.16 19.83,5.44C20.73,5.69 21.31,6.27 21.56,7.17Z"></path></svg>
-                    </a>
-                    <a href="https://www.facebook.com/dhl" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="text-gray-500 hover:text-red-600">
-                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.32 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z"></path></svg>
-                    </a>
-                    <a href="https://www.linkedin.com/company/dhl" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-gray-500 hover:text-red-600">
-                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3H19M18.5 18.5V13.2A3.26 3.26 0 0 0 15.24 9.94C14.39 9.94 13.4 10.46 13 11.11V10.28H10.13V18.5H13V13.07C13 11.94 13.44 11.04 14.71 11.04C15.94 11.04 16.4 12 16.4 13.3V18.5H18.5M6.88 8.56A1.68 1.68 0 0 0 8.56 6.88C8.56 6 8 5.44 7.19 5.44C6.38 5.44 5.79 6 5.79 6.88C5.79 7.77 6.38 8.56 6.88 8.56M8.27 18.5V10.28H5.39V18.5H8.27Z"></path></svg>
-                    </a>
-                    <a href="https://www.instagram.com/dhl_global/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-gray-500 hover:text-red-600">
-                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M7.6,4A3.6,3.6 0 0,0 4,7.6V16.4C4,18.39 5.61,20 7.6,20H16.4A3.6,3.6 0 0,0 20,16.4V7.6C20,5.61 18.39,4 16.4,4H7.6M17.25,5.5A1.25,1.25 0 0,1 18.5,6.75A1.25,1.25 0 0,1 17.25,8A1.25,1.25 0 0,1 16,6.75A1.25,1.25 0 0,1 17.25,5.5M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"></path></svg>
-                    </a>
-                </div>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="rank-up-modal" class="hidden modal-backdrop">
+        <div class="modal-content bg-slate-800 border-2 border-indigo-500 rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <h2 class="text-2xl font-bold text-amber-400 mb-2">НОВЫЙ РАНГ!</h2>
+            <p class="text-slate-300 mb-4">Вы достигли ранга:</p>
+            <p id="new-rank-name" class="text-4xl font-bold text-white bg-indigo-600 rounded-lg py-3 mb-6"></p>
+            <button id="close-rank-modal" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg py-2.5">Продолжить</button>
+        </div>
+    </div>
+    <div id="achievement-unlocked-modal" class="hidden modal-backdrop">
+        <div class="modal-content bg-slate-800 border-2 border-amber-500 rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <h2 class="text-2xl font-bold text-amber-400 mb-2">ДОСТИЖЕНИЕ РАЗБЛОКИРОВАНО!</h2>
+            <p id="achievement-name" class="text-3xl font-bold text-white mb-2"></p>
+            <p id="achievement-desc" class="text-slate-300 mb-6"></p>
+            <button id="close-achievement-modal" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg py-2.5">Отлично!</button>
+        </div>
+    </div>
+    <div id="purchase-confirm-modal" class="hidden modal-backdrop">
+        <div class="modal-content bg-slate-800 border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <h2 class="text-xl font-bold text-white mb-2">Подтверждение покупки</h2>
+            <p id="purchase-confirm-text" class="text-slate-300 mb-6"></p>
+            <div class="flex justify-between gap-4">
+                <button id="cancel-purchase-btn" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg py-2.5">Отмена</button>
+                <button id="confirm-purchase-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg py-2.5">Купить</button>
             </div>
         </div>
-    </footer>
-    
+    </div>
+    <div id="alert-modal" class="hidden modal-backdrop">
+        <div class="modal-content bg-slate-800 border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+             <p id="alert-modal-text" class="text-white text-lg mb-6"></p>
+             <button id="close-alert-modal" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg py-2.5">Понятно</button>
+        </div>
+    </div>
+
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- Firebase Config ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBqnRUwI3kJPWzHFAdHc9FIB1TAXtE5vgQ",
-            authDomain: "gamemanager-52afb.firebaseapp.com",
-            projectId: "gamemanager-52afb",
-            storageBucket: "gamemanager-52afb.appspot.com",
-            messagingSenderId: "525819683229",
-            appId: "1:525819683229:web:023499db2fc65e9476cf74"
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const dom = Object.fromEntries(['loading-screen', 'create-profile-screen', 'app-container', 'profile-form', 'logout-button', 'add-zalog', 'add-pochta', 'tabs-container', 'tab-feed', 'tab-dashboard', 'tab-ratings', 'tab-shop', 'tab-admin', 'feed-content', 'dashboard-content', 'ratings-content', 'shop-content', 'admin-content', 'rank-up-modal', 'close-rank-modal', 'new-rank-name', 'purchase-confirm-modal', 'purchase-confirm-text', 'cancel-purchase-btn', 'confirm-purchase-btn', 'alert-modal', 'alert-modal-text', 'close-alert-modal', 'user-nickname', 'user-team', 'header-balance', 'user-rank', 'user-balance', 'user-total-points', 'personal-rating-list', 'team-rating-list', 'shop-items-grid', 'admin-shop-list', 'add-item-form', 'admin-user-list', 'reset-game-btn', 'user-title', 'achievement-unlocked-modal', 'achievement-name', 'achievement-desc', 'close-achievement-modal', 'event-feed-list'].map(id => [id.replace(/-/g, ''), document.getElementById(id)]));
 
-        // --- DOM Elements ---
-        const adminPanel = document.getElementById('adminPanel');
-        const trackPackageBtn = document.getElementById('trackPackageBtn');
-        const trackingIdInput = document.getElementById('trackingIdInput');
-        const statusContainer = document.getElementById('statusContainer');
-        
-        const createPackageBtn = document.getElementById('createPackageBtn');
-        const createBtnText = document.getElementById('createBtnText');
-        const createBtnSpinner = document.getElementById('createBtnSpinner');
-        const adminMessageContainer = document.getElementById('adminMessageContainer');
-        const recentParcelsContainer = document.getElementById('recentParcelsContainer');
-        
-        const newTrackingIdInput = document.getElementById('newTrackingId');
-        const clientNameInput = document.getElementById('clientName');
-        const statusInput = document.getElementById('status');
-        const detailsInput = document.getElementById('details');
+            const RANKS = [
+                { name: "Новичок", points: 0 }, { name: "Специалист", points: 1000 }, { name: "Эксперт", points: 5000 },
+                { name: "Мастер", points: 15000 }, { name: "Легенда продаж", points: 30000 }
+            ];
 
-        let db;
+            const ACHIEVEMENTS = {
+                ZALOG_KING: { name: "Король Залогов", description: "Закройте 10 залогов.", condition: (user) => user.zalogCount >= 10 },
+                POCHTA_MASTER: { name: "Мастер Сборов", description: "Закройте 50 почтовых сборов.", condition: (user) => user.pochtaCount >= 50 },
+                SHOPAHOLIC: { name: "Коллекционер", description: "Совершите 3 покупки в магазине.", condition: (user, purchases) => purchases[user.uid]?.length >= 3 },
+                SPRINTER: { name: "Спринтер", description: "Первым наберите 1000 очков.", condition: (user, purchases, globalState) => user.totalPoints >= 1000 && !globalState.sprinterAwarded }
+            };
 
-        // --- Helper Functions ---
-        const showAdminMessage = (message, isSuccess) => {
-            adminMessageContainer.textContent = message;
-            adminMessageContainer.className = 'p-3 rounded-lg mb-4 text-center border-l-4'; // Reset classes
-            if (isSuccess) {
-                adminMessageContainer.classList.add('bg-green-100', 'text-green-800', 'border-green-500');
-            } else {
-                adminMessageContainer.classList.add('bg-red-100', 'text-red-800', 'border-red-500');
-            }
-            adminMessageContainer.classList.remove('hidden');
-        };
+            const INITIAL_SHOP_ITEMS = [
+                { id: 'item1', name: "Фирменная кружка", description: "Для самого вкусного кофе.", price: 500, icon: "cafe-outline" },
+                { id: 'item2', name: "Билет в кино", description: "На любой фильм в любое время.", price: 1500, icon: "film-outline" },
+                { id: 'item3', name: "Пицца для отдела", description: "Разделите радость с коллегами.", price: 3000, icon: "pizza-outline" },
+                { id: 'item4', name: "Дополнительный выходной", description: "Заслуженный отдых.", price: 10000, icon: "sunny-outline" },
+                { id: 'item5', name: "Сертификат в ресторан", description: "На романтический ужин.", price: 7500, icon: "restaurant-outline"},
+                { id: 'item6', name: "Наушники", description: "Для работы и отдыха.", price: 12000, icon: "headset-outline"}
+            ];
 
-        const formatStatusMessage = (message, type = 'success') => {
-            const baseClass = 'p-4 border-l-4 rounded-r-lg';
-            if (type === 'error') {
-                return `<div class="${baseClass} border-red-500 bg-red-50 text-red-800">${message}</div>`;
-            }
-            return `<div class="${baseClass} border-green-500 bg-green-50 text-gray-800">${message}</div>`;
-        };
+            let state = {
+                currentUserUid: null,
+                users: {},
+                shopItems: [],
+                purchases: {},
+                global: {},
+                eventLog: []
+            };
 
-        const toggleCreateButtonLoading = (isLoading) => {
-            createPackageBtn.disabled = isLoading;
-            if(isLoading) {
-                createBtnText.classList.add('hidden');
-                createBtnSpinner.classList.remove('hidden');
-            } else {
-                createBtnText.classList.remove('hidden');
-                createBtnSpinner.classList.add('hidden');
-            }
-        };
-
-        // --- Firebase Logic ---
-        const listenForRecentParcels = () => {
-            db.collection("parcels").orderBy("createdAt", "desc").limit(5)
-              .onSnapshot((querySnapshot) => {
-                recentParcelsContainer.innerHTML = '';
-                if (querySnapshot.empty) {
-                     recentParcelsContainer.innerHTML = '<p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">No records yet. Create the first one!</p>';
-                     return;
+            function loadState() {
+                state.currentUserUid = localStorage.getItem('salesGameCurrentUserUid');
+                state.users = JSON.parse(localStorage.getItem('salesGameUsers')) || {};
+                state.shopItems = JSON.parse(localStorage.getItem('salesGameShopItems')) || INITIAL_SHOP_ITEMS;
+                state.purchases = JSON.parse(localStorage.getItem('salesGamePurchases')) || {};
+                state.global = JSON.parse(localStorage.getItem('salesGameGlobal')) || { sprinterAwarded: false };
+                state.eventLog = JSON.parse(localStorage.getItem('salesGameEventLog')) || [];
+                
+                const adminExists = Object.values(state.users).some(u => u.isAdmin);
+                if (!adminExists) {
+                    const adminId = 'admin-user-001';
+                    state.users[adminId] = {
+                        uid: adminId, nickname: 'Admin', team: 'Администрация',
+                        totalPoints: 99999, rank: "Всемогущий", balance: 99999,
+                        zalogCount: 0, pochtaCount: 0, createdAt: new Date().toISOString(),
+                        isAdmin: true, unlockedAchievements: [], equippedTitle: null
+                    };
                 }
-                const list = document.createElement('ul');
-                list.className = 'space-y-3';
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const item = document.createElement('li');
-                    item.className = 'bg-gray-50 p-3 rounded-md border border-gray-200';
-                    item.innerHTML = `
-                        <p class="font-bold text-gray-800">${data.clientName}</p>
-                        <p class="text-sm text-gray-600">Code: <span class="font-mono bg-gray-200 px-1 rounded">${data.trackingId}</span></p>
-                        <p class="text-sm text-gray-600">Status: ${data.status}</p>
+
+                if (!localStorage.getItem('salesGameShopItems')) {
+                    saveState();
+                }
+            }
+
+            function saveState() {
+                localStorage.setItem('salesGameCurrentUserUid', state.currentUserUid);
+                localStorage.setItem('salesGameUsers', JSON.stringify(state.users));
+                localStorage.setItem('salesGameShopItems', JSON.stringify(state.shopItems));
+                localStorage.setItem('salesGamePurchases', JSON.stringify(state.purchases));
+                localStorage.setItem('salesGameGlobal', JSON.stringify(state.global));
+                localStorage.setItem('salesGameEventLog', JSON.stringify(state.eventLog));
+            }
+
+            function addLogEntry(message, icon) {
+                state.eventLog.unshift({
+                    message,
+                    icon,
+                    timestamp: new Date().toISOString(),
+                    id: crypto.randomUUID()
+                });
+                if (state.eventLog.length > 50) { // Ограничиваем лог
+                    state.eventLog.pop();
+                }
+            }
+            
+            function updateUI() {
+                if (!state.currentUserUid || !state.users[state.currentUserUid]) {
+                    showCreateProfileScreen();
+                    return;
+                }
+
+                const user = state.users[state.currentUserUid];
+                
+                checkAchievements(user);
+
+                dom.tabadmin.classList.toggle('hidden', !user.isAdmin);
+                
+                const oldRank = user.rank;
+                const newRank = getRankForPoints(user.totalPoints);
+                if (newRank !== oldRank && !user.isAdmin) {
+                    user.rank = newRank;
+                    addLogEntry(`**${user.nickname}** достиг ранга **${newRank}**!`, 'ribbon-outline');
+                    showRankUpModal(newRank);
+                }
+
+                const balanceFormatted = user.balance.toLocaleString('ru-RU');
+                dom.usernickname.textContent = user.nickname;
+                dom.userteam.textContent = `Команда "${user.team}"`;
+                dom.usertitle.textContent = user.equippedTitle || '';
+                dom.usertitle.classList.toggle('hidden', !user.equippedTitle);
+                dom.headerbalance.querySelector('span').textContent = balanceFormatted;
+                dom.userrank.textContent = user.rank;
+                dom.userbalance.textContent = balanceFormatted;
+                dom.usertotalpoints.textContent = user.totalPoints.toLocaleString('ru-RU');
+                
+                renderEventFeed();
+                updateRatingsUI();
+                renderShopItems();
+                renderAdminPanel();
+                
+                showAppContainer();
+                saveState();
+            }
+
+            function handleLoginOrCreate(e) {
+                e.preventDefault();
+                const nicknameInput = dom.profileform.nickname;
+                const teamInput = dom.profileform.team;
+                const nickname = nicknameInput.value.trim();
+
+                if (nickname.toLowerCase() === 'admin') {
+                    const adminUser = Object.values(state.users).find(u => u.isAdmin);
+                    if (adminUser) {
+                        state.currentUserUid = adminUser.uid;
+                        updateUI();
+                        dom.profileform.reset();
+                    }
+                    return;
+                }
+
+                const team = teamInput.value;
+                if (!nickname || !team) {
+                    showAlert("Пожалуйста, заполните никнейм и выберите команду.");
+                    return;
+                }
+
+                const uid = crypto.randomUUID();
+                state.users[uid] = {
+                    uid, nickname, team,
+                    totalPoints: 0, rank: "Новичок", balance: 0,
+                    zalogCount: 0, pochtaCount: 0,
+                    createdAt: new Date().toISOString(),
+                    isAdmin: false, unlockedAchievements: [], equippedTitle: null
+                };
+                state.currentUserUid = uid;
+                state.purchases[uid] = [];
+                addLogEntry(`Новый игрок в команде! **${nickname}** присоединился к нам.`, 'person-add-outline');
+                updateUI();
+                dom.profileform.reset();
+            }
+
+            function addPoints(points, counterField) {
+                const user = state.users[state.currentUserUid];
+                if (!user || user.isAdmin) return;
+                user.balance += points;
+                user.totalPoints += points;
+                user[counterField] += 1;
+                
+                if (points === 100) {
+                    addLogEntry(`**${user.nickname}** закрыл **Залог** (+100 очков).`, 'shield-checkmark-outline');
+                } else if (points === 20) {
+                    addLogEntry(`**${user.nickname}** обработал **Почтовые сборы** (+20 очков).`, 'mail-outline');
+                }
+
+                updateUI();
+            }
+            
+            function handlePurchase(item) {
+                const user = state.users[state.currentUserUid];
+                if (!user || user.balance < item.price) { return showAlert("Недостаточно средств!"); }
+                dom.purchaseconfirmmodal.classList.add('hidden');
+                user.balance -= item.price;
+                if (!state.purchases[state.currentUserUid]) { state.purchases[state.currentUserUid] = []; }
+                state.purchases[state.currentUserUid].push({ itemId: item.id, itemName: item.name, price: item.price, purchasedAt: new Date().toISOString() });
+                addLogEntry(`**${user.nickname}** купил **${item.name}** в магазине.`, 'bag-handle-outline');
+                showAlert(`Поздравляем! Вы приобрели "${item.name}".`);
+                updateUI();
+            }
+
+            function logout() {
+                state.currentUserUid = null;
+                localStorage.removeItem('salesGameCurrentUserUid');
+                showCreateProfileScreen();
+            }
+            
+            function checkAchievements(user) {
+                if (user.isAdmin) return;
+                for (const key in ACHIEVEMENTS) {
+                    const achievement = ACHIEVEMENTS[key];
+                    if (!user.unlockedAchievements.includes(key) && achievement.condition(user, state.purchases, state.global)) {
+                        user.unlockedAchievements.push(key);
+                        user.equippedTitle = achievement.name;
+                        if(key === 'SPRINTER') {
+                            state.global.sprinterAwarded = true;
+                        }
+                        addLogEntry(`**${user.nickname}** получил достижение: **${achievement.name}**!`, 'star-outline');
+                        showAchievementUnlockedModal(achievement);
+                    }
+                }
+            }
+
+            function renderEventFeed() {
+                dom.eventfeedlist.innerHTML = '';
+                state.eventLog.forEach(log => {
+                    const timeAgo = formatTimeAgo(log.timestamp);
+                    const messageHTML = log.message.replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-400 font-semibold">$1</strong>');
+                    dom.eventfeedlist.innerHTML += `
+                        <li class="flex items-start p-3 bg-slate-700/50 rounded-lg">
+                            <ion-icon name="${log.icon}" class="text-xl text-slate-400 mr-4 mt-1"></ion-icon>
+                            <div class="flex-1">
+                                <p class="text-white">${messageHTML}</p>
+                                <p class="text-xs text-slate-500 mt-1">${timeAgo}</p>
+                            </div>
+                        </li>
                     `;
-                    list.appendChild(item);
                 });
-                recentParcelsContainer.appendChild(list);
-            }, (error) => {
-                console.error("Snapshot error:", error);
-                showAdminMessage("Error listening to the database: " + error.message, false);
-            });
-        };
-
-        const createPackage = async () => {
-            if (!newTrackingIdInput.value.trim() || !clientNameInput.value.trim()) {
-                showAdminMessage("Please fill in Tracking Code and Client's Full Name.", false);
-                return;
             }
-            toggleCreateButtonLoading(true);
 
-            try {
-                await db.collection("parcels").add({
-                    trackingId: newTrackingIdInput.value.trim().toUpperCase(),
-                    clientName: clientNameInput.value.trim(),
-                    status: statusInput.value.trim() || 'Processing',
-                    details: detailsInput.value.trim(),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            function formatTimeAgo(dateString) {
+                const now = new Date();
+                const past = new Date(dateString);
+                const seconds = Math.floor((now - past) / 1000);
+
+                let interval = seconds / 31536000;
+                if (interval > 1) return Math.floor(interval) + " г. назад";
+                interval = seconds / 2592000;
+                if (interval > 1) return Math.floor(interval) + " мес. назад";
+                interval = seconds / 86400;
+                if (interval > 1) return Math.floor(interval) + " д. назад";
+                interval = seconds / 3600;
+                if (interval > 1) return Math.floor(interval) + " ч. назад";
+                interval = seconds / 60;
+                if (interval > 1) return Math.floor(interval) + " мин. назад";
+                return "Только что";
+            }
+            
+            function handleAddItem(e) {
+                e.preventDefault();
+                const form = dom.additemform;
+                const name = form.querySelector('#item-name').value;
+                if (name) {
+                    addLogEntry(`Администратор добавил новый товар: **${name}**`, 'add-circle-outline');
+                }
+                const description = form.querySelector('#item-desc').value;
+                const price = parseInt(form.querySelector('#item-price').value);
+                const icon = form.querySelector('#item-icon').value;
+                if (name && description && price > 0) {
+                    state.shopItems.push({ id: 'item' + Date.now(), name, description, price, icon });
+                    form.reset();
+                    updateUI();
+                }
+            }
+            
+            function handleResetGame() {
+                if (confirm("Вы уверены, что хотите сбросить всю игру? Это действие необратимо!")) {
+                    addLogEntry(`**Администратор** полностью перезапустил игру!`, 'alert-circle-outline');
+                    saveState(); // Сохраняем последнее событие перед сбросом
+                    localStorage.removeItem('salesGameCurrentUserUid');
+                    localStorage.removeItem('salesGameUsers');
+                    localStorage.removeItem('salesGameShopItems');
+                    localStorage.removeItem('salesGamePurchases');
+                    localStorage.removeItem('salesGameGlobal');
+                    localStorage.removeItem('salesGameEventLog');
+                    state.currentUserUid = null; state.users = {}; state.shopItems = []; state.purchases = {}; state.global = {}; state.eventLog = [];
+                    loadState();
+                    updateUI();
+                }
+            }
+
+            function getRankForPoints(points) { return RANKS.slice().reverse().find(r => points >= r.points)?.name || RANKS[0].name; }
+            function updateRatingsUI() { const allUsers = Object.values(state.users).filter(u => !u.isAdmin); allUsers.sort((a,b) => b.totalPoints - a.totalPoints); dom.personalratinglist.innerHTML = ''; allUsers.forEach((user, index) => { const isCurrentUser = user.uid === state.currentUserUid; dom.personalratinglist.innerHTML += `<li class="flex items-center justify-between p-3 rounded-lg ${isCurrentUser ? 'bg-indigo-600' : 'bg-slate-700'}"><div class="flex items-center"><span class="text-sm font-bold w-6 text-center mr-3">${index + 1}</span><div><p class="font-semibold">${user.nickname}</p><p class="text-xs text-slate-400">Команда "${user.team}"</p></div></div><span class="font-bold text-lg">${user.totalPoints.toLocaleString('ru-RU')}</span></li>`; }); const teamScores = allUsers.reduce((acc, user) => { acc[user.team] = (acc[user.team] || 0) + user.totalPoints; return acc; }, {}); const sortedTeams = Object.entries(teamScores).map(([name, score]) => ({ name, score })).sort((a, b) => b.score - a.score); dom.teamratinglist.innerHTML = ''; sortedTeams.forEach((team, index) => { dom.teamratinglist.innerHTML += `<li class="bg-slate-700 p-4 rounded-lg flex items-center justify-between"><div class="flex items-center"><span class="text-lg font-bold w-8 text-center mr-4">${index + 1}</span><p class="font-bold text-xl">${team.name}</p></div><span class="font-bold text-2xl text-indigo-400">${team.score.toLocaleString('ru-RU')}</span></li>`; }); }
+            function renderShopItems() { const user = state.users[state.currentUserUid]; if (!user) return; dom.shopitemsgrid.innerHTML = ''; state.shopItems.sort((a,b) => a.price - b.price).forEach(item => { const canAfford = user.balance >= item.price; const buttonClasses = canAfford ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-500 cursor-not-allowed'; dom.shopitemsgrid.innerHTML += `<div class="bg-slate-700/50 rounded-xl p-4 flex flex-col"><div class="w-full h-32 bg-slate-600 rounded-lg flex items-center justify-center mb-4"><ion-icon name="${item.icon || 'storefront-outline'}" class="text-5xl text-slate-400"></ion-icon></div><h3 class="font-bold text-lg text-white">${item.name}</h3><p class="text-sm text-slate-400 mb-4 flex-grow">${item.description}</p><div class="flex justify-between items-center"><span class="font-bold text-lg text-green-400">${item.price.toLocaleString()}</span><button class="buy-btn text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors ${buttonClasses}" data-item-id="${item.id}" ${!canAfford ? 'disabled' : ''}>Купить</button></div></div>`; }); document.querySelectorAll('.buy-btn').forEach(btn => btn.addEventListener('click', (e) => { const item = state.shopItems.find(i => i.id === e.target.dataset.itemId); if (item) openPurchaseConfirmModal(item); })); }
+            function openPurchaseConfirmModal(item) { dom.purchaseconfirmtext.textContent = `Вы уверены, что хотите купить "${item.name}" за ${item.price.toLocaleString()} очков?`; dom.confirmpurchasebtn.onclick = () => handlePurchase(item); dom.purchaseconfirmmodal.classList.remove('hidden'); }
+            function showAlert(message) { dom.alertmodaltext.textContent = message; dom.alertmodal.classList.remove('hidden'); }
+            function showRankUpModal(newRank) { dom.newrankname.textContent = newRank; dom.rankupmodal.classList.remove('hidden'); }
+            function showAchievementUnlockedModal(achievement) { dom.achievementname.textContent = achievement.name; dom.achievementdesc.textContent = achievement.description; dom.achievementunlockedmodal.classList.remove('hidden'); }
+            
+            function switchTab(tab) {
+                ['feed', 'dashboard', 'ratings', 'shop', 'admin'].forEach(t => {
+                    dom[`${t}content`]?.classList.add('hidden');
+                    dom[`tab${t}`]?.classList.remove('tab-active');
                 });
-
-                showAdminMessage(`Parcel for ${clientNameInput.value} created successfully!`, true);
-                newTrackingIdInput.value = '';
-                clientNameInput.value = '';
-                statusInput.value = 'In transit';
-                detailsInput.value = '';
-
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                showAdminMessage("Creation Error: " + error.message, false);
-            } finally {
-                toggleCreateButtonLoading(false);
+                dom[`${tab}content`]?.classList.remove('hidden');
+                dom[`tab${tab}`]?.classList.add('tab-active');
             }
-        };
-        
-        const trackPackage = async () => {
-             if (!trackingIdInput.value.trim()) {
-                statusContainer.innerHTML = formatStatusMessage('Please enter a tracking number.', 'error');
-                return;
-            }
-            statusContainer.innerHTML = `<div class="flex justify-center items-center"><svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Searching...</span></div>`;
+            function showLoadingScreen() { dom.loadingscreen.classList.remove('hidden'); dom.createprofilescreen.classList.add('hidden'); dom.appcontainer.classList.add('hidden'); }
+            function showCreateProfileScreen() { dom.loadingscreen.classList.add('hidden'); dom.createprofilescreen.classList.remove('hidden'); dom.appcontainer.classList.add('hidden'); }
+            function showAppContainer() { dom.loadingscreen.classList.add('hidden'); dom.createprofilescreen.classList.add('hidden'); dom.appcontainer.classList.remove('hidden'); if (!dom.tabdashboard.classList.contains('tab-active') && !dom.tabratings.classList.contains('tab-active') && !dom.tabshop.classList.contains('tab-active') && !dom.tabadmin.classList.contains('tab-active') && !dom.tabfeed.classList.contains('tab-active')) { switchTab('feed'); } }
+            
+            dom.profileform.addEventListener('submit', handleLoginOrCreate);
+            dom.logoutbutton.addEventListener('click', logout);
+            dom.addzalog.addEventListener('click', () => addPoints(100, 'zalogCount'));
+            dom.addpochta.addEventListener('click', () => addPoints(20, 'pochtaCount'));
+            ['feed', 'dashboard', 'ratings', 'shop', 'admin'].forEach(tabId => dom[`tab${tabId}`]?.addEventListener('click', () => switchTab(tabId)));
+            dom.closerankmodal.addEventListener('click', () => dom.rankupmodal.classList.add('hidden'));
+            dom.closeachievementmodal.addEventListener('click', () => dom.achievementunlockedmodal.classList.add('hidden'));
+            dom.cancelpurchasebtn.addEventListener('click', () => dom.purchaseconfirmmodal.classList.add('hidden'));
+            dom.closealertmodal.addEventListener('click', () => dom.alertmodal.classList.add('hidden'));
+            dom.additemform.addEventListener('submit', handleAddItem);
+            dom.resetgamebtn.addEventListener('click', handleResetGame);
+            dom.adminshoplist.addEventListener('click', (e) => { if (e.target.classList.contains('admin-delete-item')) { handleDeleteItem(e.target.dataset.id); } });
+            dom.adminuserlist.addEventListener('click', (e) => { if(e.target.classList.contains('admin-delete-user')) { handleDeleteUser(e.target.dataset.id); } });
 
-            try {
-                const querySnapshot = await db.collection("parcels").where("trackingId", "==", trackingIdInput.value.trim().toUpperCase()).get();
-                
-                if (querySnapshot.empty) {
-                    statusContainer.innerHTML = formatStatusMessage(`Shipment <strong>${trackingIdInput.value.toUpperCase()}</strong> not found.`, 'error');
-                } else {
-                    const data = querySnapshot.docs[0].data();
-                    statusContainer.innerHTML = formatStatusMessage(`
-                        <h3 class="font-bold text-green-800 text-xl mb-2">Status for: ${data.clientName}</h3>
-                        <p><strong>Number:</strong> ${data.trackingId}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
-                        <p class="mt-2"><strong>Details:</strong> ${data.details}</p>
-                    `, 'success');
-                }
-            } catch (error) {
-                 statusContainer.innerHTML = formatStatusMessage(`Search Error: ${error.message}`, 'error');
-            }
-        };
+            function renderAdminPanel() { dom.adminshoplist.innerHTML = ''; state.shopItems.forEach(item => { dom.adminshoplist.innerHTML += `<div class="bg-slate-700 p-2 rounded-md flex justify-between items-center text-sm"><span>${item.name} - ${item.price} очков</span><button class="admin-delete-item text-red-400 hover:text-red-600" data-id="${item.id}">Удалить</button></div>`; }); dom.adminuserlist.innerHTML = ''; Object.values(state.users).filter(u => !u.isAdmin).forEach(user => { dom.adminuserlist.innerHTML += `<div class="bg-slate-700 p-2 rounded-md flex justify-between items-center text-sm"><span>${user.nickname} (${user.team})</span><button class="admin-delete-user text-red-400 hover:text-red-600" data-id="${user.uid}">Удалить</button></div>`; }); }
+            function handleDeleteItem(id) { state.shopItems = state.shopItems.filter(item => item.id !== id); updateUI(); }
+            function handleDeleteUser(id) { delete state.users[id]; delete state.purchases[id]; updateUI(); }
 
-        // --- Initialization ---
-        const initializeApp = () => {
-             try {
-                console.log("Initializing Firebase...");
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                console.log("Firestore initialized.");
-                
-                // --- Show/Hide Admin Panel ---
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('admin') === 'true') {
-                    adminPanel.classList.remove('hidden');
-                }
-                
-                // Set up listeners
-                createPackageBtn.addEventListener('click', createPackage);
-                trackPackageBtn.addEventListener('click', trackPackage);
-                
-                // Start listening for real-time updates
-                listenForRecentParcels();
-
-            } catch (error) {
-                console.error("FATAL: Firebase initialization failed", error);
-                const adminContainer = document.getElementById('adminPanel');
-                adminContainer.innerHTML = '<p class="text-center text-red-500 bg-red-50 p-4 rounded-lg">CRITICAL ERROR: Could not initialize Firebase. Check your configuration in the code.</p>';
-                adminContainer.classList.remove('hidden');
-            }
-        };
-
-        initializeApp();
-    });
+            loadState();
+            updateUI();
+        });
     </script>
 </body>
 </html>
