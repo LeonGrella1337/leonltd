@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карьера в нашей команде</title>
+    <title>DeepTreydCompany | Войди в игру</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,42 +24,51 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            opacity: 0.7;
         }
         .main-container {
             position: relative;
             z-index: 2;
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(15, 15, 30, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(10, 10, 26, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.15); /* Gold border */
+            box-shadow: 0 8px 32px 0 rgba(10, 10, 26, 0.4);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .glass-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 16px 40px 0 rgba(10, 10, 26, 0.4);
+            box-shadow: 0 16px 50px 0 rgba(10, 10, 26, 0.5);
         }
         .main-title {
             color: #fff;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            text-shadow: 0 0 15px rgba(255,255,255,0.5), 0 0 30px rgba(255, 215, 0, 0.7); /* Gold shadow */
         }
         .action-button {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 215, 0, 0.3); /* Gold background */
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 215, 0, 0.6);
             transition: all 0.3s ease;
         }
         .action-button:hover {
-            background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            background: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
             transform: scale(1.05);
         }
         .icon {
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 1rem;
+            margin: 0 auto 1rem;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            object-fit: cover;
         }
     </style>
 </head>
@@ -73,20 +82,21 @@
         
         <!-- Заголовок -->
         <header class="text-center my-12 md:my-16">
-            <h1 class="main-title text-4xl md:text-5xl font-bold tracking-wide">Развивайтесь вместе с нами</h1>
+            <img src="https://i.postimg.cc/bNVxhcNH/2025-06-27-23-16-00.jpg" alt="DeepTreydCompany Logo" class="logo" onerror="this.onerror=null;this.src='https://placehold.co/100x100/0a0a1a/ffffff?text=Logo';">
+            <h2 class="text-2xl text-gray-300 mb-4">DeepTreydCompany ищет сотрудников</h2>
+            <h1 class="main-title text-5xl md:text-6xl font-bold tracking-wider uppercase">Войди в игру</h1>
             <p class="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto mt-4" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.3);">
-                Мы ищем талантливых специалистов, готовых расти и добиваться высоких результатов в дружной и динамичной команде.
+                Здесь твои амбиции превращаются в кэш. Готов к новым правилам?
             </p>
         </header>
 
         <main class="space-y-12">
             <!-- Секция: Задачи -->
             <section class="glass-card p-6 sm:p-8">
-                <h2 class="text-3xl font-bold mb-4">Ваши будущие задачи</h2>
+                <h2 class="text-3xl font-bold mb-4">Твоя миссия</h2>
                 <div class="text-lg space-y-3">
-                    <p>Вы будете работать с <strong class="font-semibold">качественными входящими заявками</strong> от клиентов, которые уже заинтересованы в наших услугах.</p>
-                    <p>Ваша основная цель — предоставлять консультации, вести переговоры в чатах и по телефону для успешного заключения сделок.</p>
-                    <p class="text-gray-200 text-base">Мы ценим инициативность и нацеленность на результат, предлагая прозрачную систему мотивации.</p>
+                    <p>Никакой рутины. Твоя задача — работать с <strong class="font-semibold text-yellow-300">горячими лидами</strong>, которые уже хотят с нами говорить.</p>
+                    <p>Ты будешь закрывать сделки через чаты и звонки. Больше эффективности — больше твой доход. Все просто.</p>
                 </div>
             </section>
             
@@ -96,25 +106,25 @@
                     <!-- Деньги -->
                     <div class="glass-card p-6">
                         <div class="flex items-center mb-4">
-                            <svg class="w-10 h-10 mr-4 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                            <h3 class="text-2xl font-bold">ДОХОД</h3>
+                            <svg class="w-10 h-10 mr-4 icon text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1h4a1 1 0 011 1v10a1 1 0 01-1 1h-4v-1m-2-14H8a1 1 0 00-1 1v10a1 1 0 001 1h4V3z"></path></svg>
+                            <h3 class="text-2xl font-bold">ТВОЙ КЭШ</h3>
                         </div>
                         <ul class="space-y-2 text-lg">
-                            <li>Стартовая ставка: <strong class="font-bold">150$</strong> еженедельно.</li>
-                            <li>Средний доход: от <strong class="font-bold">500$</strong> в неделю, с возможностью роста.</li>
-                            <li>Выплаты: <strong class="text-gray-100">Стабильно каждый понедельник</strong> (карта/криптовалюта).</li>
+                            <li>Ставка на старте: <strong class="font-bold text-green-400">150$</strong> в неделю.</li>
+                            <li>Средний доход: от <strong class="font-bold text-green-400">500$</strong> в неделю. Это не предел.</li>
+                            <li>Выплаты: <strong class="text-gray-100">Каждый понедельник</strong> (карта или крипта).</li>
                         </ul>
                     </div>
                      <!-- Условия -->
                     <div class="glass-card p-6">
                         <div class="flex items-center mb-4">
-                           <svg class="w-10 h-10 mr-4 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            <h3 class="text-2xl font-bold">УСЛОВИЯ</h3>
+                           <svg class="w-10 h-10 mr-4 icon text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <h3 class="text-2xl font-bold">ТВОИ УСЛОВИЯ</h3>
                         </div>
                         <ul class="space-y-2 text-lg">
-                            <li><strong>Офис:</strong> Киев, комфортное рабочее место у м. Левобережная.</li>
-                            <li><strong>Помощь с переездом:</strong> Предоставляем <strong class="font-semibold">жилье для иногородних</strong>.</li>
-                            <li><strong>График:</strong> 6/1. Пн-Пт 10-19, Сб 10-15.</li>
+                            <li><strong>Локация:</strong> Заряженный офис в Киеве (м. Левобережная).</li>
+                            <li><strong>Релокейт:</strong> Предоставляем <strong class="font-semibold text-cyan-300">жилье для иногородних</strong>.</li>
+                            <li><strong>График:</strong> 6/1. Время делать результат.</li>
                         </ul>
                     </div>
                 </div>
@@ -122,12 +132,12 @@
             
             <!-- Секция: Call to Action -->
             <section class="my-16 text-center">
-                 <h2 class="main-title text-4xl font-bold mb-4">Заинтересовала вакансия?</h2>
-                 <p class="text-xl text-gray-200 mb-8 max-w-2xl mx-auto" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.2);">Будем рады ответить на ваши вопросы и обсудить возможное сотрудничество.</p>
+                 <h2 class="main-title text-5xl font-bold mb-4">ГОТОВ?</h2>
+                 <p class="text-xl text-gray-200 mb-8 max-w-2xl mx-auto" style="text-shadow: 1px 1px 5px rgba(0,0,0,0.2);">Хватит ждать. Сделай шаг.</p>
                  <a href="https://t.me/your_telegram_username" target="_blank" class="action-button inline-block text-white font-bold text-lg uppercase py-4 px-10 rounded-2xl tracking-widest">
-                     Связаться с HR
+                     Начать
                  </a>
-                 <p class="mt-6 text-sm text-gray-300">Telegram: <a href="https://t.me/your_telegram_username" class="underline hover:text-white font-semibold">@your_telegram_username</a> | Email: <a href="mailto:hr@example.com" class="underline hover:text-white font-semibold">hr@example.com</a></p>
+                 <p class="mt-6 text-sm text-gray-400">Связь: Telegram <a href="https://t.me/your_telegram_username" class="underline hover:text-white font-semibold">@your_telegram_username</a> | Email <a href="mailto:hr@example.com" class="underline hover:text-white font-semibold">hr@example.com</a></p>
             </section>
 
         </main>
@@ -143,36 +153,58 @@
         camera.position.z = 5;
 
         // --- Рендерер ---
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         // --- Освещение ---
-        // Мягкий свет, освещающий всю сцену
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-        scene.add(ambientLight);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(5, 5, 5);
+        scene.add(dirLight);
 
-        // Направленный свет для создания бликов
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(5, 5, 5);
-        scene.add(directionalLight);
+        const pointLight1 = new THREE.PointLight(0xffe580, 1.5); // Теплый золотистый свет
+        pointLight1.position.set(-5, -2, 3);
+        scene.add(pointLight1);
+        
+        const pointLight2 = new THREE.PointLight(0x40a8ff, 2); // Контрастный холодный свет
+        pointLight2.position.set(5, 2, 2);
+        scene.add(pointLight2);
+        
 
-        const pointLight = new THREE.PointLight(0xa21caf, 1.5);
-        pointLight.position.set(-5, -5, -5);
-        scene.add(pointLight)
+        // --- 3D Объекты ---
+        const group = new THREE.Group();
+        scene.add(group);
 
-
-        // --- 3D Объект (Кристалл) ---
-        const geometry = new THREE.IcosahedronGeometry(1.5, 0); // Икосаэдр - форма кристалла
-        const material = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            roughness: 0.1,
-            metalness: 0.5,
-            transparent: true,
-            opacity: 0.5,
+        // Золотой материал
+        const goldMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffd700, // Gold color
+            metalness: 0.9,  // High metalness for a metallic look
+            roughness: 0.2,  // Low roughness for a shiny surface
         });
-        const crystal = new THREE.Mesh(geometry, material);
-        scene.add(crystal);
+
+        // Центральный объект
+        const mainGeometry = new THREE.TorusKnotGeometry(1, 0.3, 128, 16);
+        const mainObject = new THREE.Mesh(mainGeometry, goldMaterial);
+        mainObject.castShadow = true;
+        group.add(mainObject);
+
+        // Частицы вокруг
+        const particlesGeometry = new THREE.IcosahedronGeometry(0.08, 0);
+        for (let i = 0; i < 50; i++) {
+            const particle = new THREE.Mesh(particlesGeometry, goldMaterial);
+            const phi = Math.random() * Math.PI * 2;
+            const theta = Math.random() * Math.PI;
+            const radius = 2.5 + Math.random() * 1.5;
+
+            particle.position.set(
+                radius * Math.cos(phi) * Math.sin(theta),
+                radius * Math.sin(phi) * Math.sin(theta),
+                radius * Math.cos(theta)
+            );
+            group.add(particle);
+        }
+
 
         // --- Взаимодействие с мышью ---
         let mouseX = 0;
@@ -187,19 +219,23 @@
         function animate() {
             const elapsedTime = clock.getElapsedTime();
 
-            // Автоматическое вращение
-            crystal.rotation.y = elapsedTime * 0.2;
-            crystal.rotation.x = elapsedTime * 0.1;
+            // Анимация группы объектов
+            group.rotation.y = elapsedTime * 0.1;
+            group.rotation.x = elapsedTime * 0.05;
 
-            // Вращение вслед за мышью
-            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.05;
-            camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.05;
+            // Движение камеры за мышью
+            camera.position.x += (mouseX * 1.5 - camera.position.x) * 0.05;
+            camera.position.y += (mouseY * 1.5 - camera.position.y) * 0.05;
             camera.lookAt(scene.position);
 
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         }
-        animate();
+        
+        // --- Запуск анимации ---
+        window.onload = function() {
+            animate();
+        };
 
         // --- Адаптивность ---
         window.addEventListener('resize', () => {
