@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отслеживание и Управление - DHL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs - Classic Import -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .dhl-brand { background-color: #FFCC00; color: #D40511; }
+        .btn-dhl { background-color: #FFCC00; color: #333; font-weight: 700; transition: background-color 0.3s; }
+        .btn-dhl:hover { background-color: #e6b800; }
+        .btn-admin { background-color: #D40511; color: white; font-weight: 700; transition: background-color 0.3s; }
+        .btn-admin:hover:not(:disabled) { background-color: #a8040d; }
+        .btn-admin:disabled { background-color: #f87171; cursor: not-allowed; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="dhl-brand px-3 py-1 text-3xl font-extrabold tracking-tighter rounded">DHL</div>
+            <div class="hidden md:flex space-x-6 items-center">
+                <a href="#" class="text-gray-600 hover:text-red-600 font-medium">Экспресс</a>
+                <a href="#" class="text-gray-600 hover:text-red-600 font-medium">Логистика</a>
+                <a href="#" class="text-gray-600 hover:text-red-600 font-medium">Поддержка</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
+        <!-- Client Tracking Section -->
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Отследить ваше отправление</h1>
+            <p class="text-gray-500 mb-6">Введите персональный номер для отслеживания.</p>
+            <div class="space-y-4">
+                <textarea id="trackingIdInput" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition" placeholder="Например: PETROV777MSK"></textarea>
+                <button id="trackPackageBtn" class="w-full btn-dhl py-3 rounded-lg text-lg">Отследить</button>
+            </div>
+            <div id="statusContainer" class="mt-8"></div>
+        </div>
+
+        <!-- Admin Panel Section - Hidden by default -->
+        <div id="adminPanel" class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-12 border-t-4 border-red-600 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Панель администратора: Создать посылку</h2>
+            <div id="adminMessageContainer" class="p-3 rounded-lg mb-4 text-center border-l-4 hidden"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="newTrackingId" class="block text-sm font-medium text-gray-700">Код отслеживания</label>
+                    <input type="text" id="newTrackingId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="clientName" class="block text-sm font-medium text-gray-700">ФИО клиента</label>
+                    <input type="text" id="clientName" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="status" class="block text-sm font-medium text-gray-700">Статус</label>
+                    <input type="text" id="status" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" value="В пути">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="details" class="block text-sm font-medium text-gray-700">Дополнительная информация</label>
+                    <textarea id="details" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" placeholder="Например: Вес: 2.5 кг, Направление: Москва - Санкт-Петербург"></textarea>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button id="createPackageBtn" class="w-full btn-admin py-3 rounded-lg text-lg flex justify-center items-center">
+                    <span id="createBtnText">Создать запись</span>
+                    <svg id="createBtnSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mt-8 border-t pt-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">Последние созданные посылки</h3>
+                <div id="recentParcelsContainer">
+                     <p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Подключение к базе данных...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqnRUwI3kJPWzHFAdHc9FIB1TAXtE5vgQ",
+            authDomain: "gamemanager-52afb.firebaseapp.com",
+            projectId: "gamemanager-52afb",
+            storageBucket: "gamemanager-52afb.appspot.com",
+            messagingSenderId: "525819683229",
+            appId: "1:525819683229:web:023499db2fc65e9476cf74"
+        };
+
+        // --- DOM Elements ---
+        const adminPanel = document.getElementById('adminPanel');
+        const trackPackageBtn = document.getElementById('trackPackageBtn');
+        const trackingIdInput = document.getElementById('trackingIdInput');
+        const statusContainer = document.getElementById('statusContainer');
+        
+        const createPackageBtn = document.getElementById('createPackageBtn');
+        const createBtnText = document.getElementById('createBtnText');
+        const createBtnSpinner = document.getElementById('createBtnSpinner');
+        const adminMessageContainer = document.getElementById('adminMessageContainer');
+        const recentParcelsContainer = document.getElementById('recentParcelsContainer');
+        
+        const newTrackingIdInput = document.getElementById('newTrackingId');
+        const clientNameInput = document.getElementById('clientName');
+        const statusInput = document.getElementById('status');
+        const detailsInput = document.getElementById('details');
+
+        let db;
+
+        // --- Helper Functions ---
+        const showAdminMessage = (message, isSuccess) => {
+            adminMessageContainer.textContent = message;
+            adminMessageContainer.className = 'p-3 rounded-lg mb-4 text-center border-l-4'; // Reset classes
+            if (isSuccess) {
+                adminMessageContainer.classList.add('bg-green-100', 'text-green-800', 'border-green-500');
+            } else {
+                adminMessageContainer.classList.add('bg-red-100', 'text-red-800', 'border-red-500');
+            }
+            adminMessageContainer.classList.remove('hidden');
+        };
+
+        const formatStatusMessage = (message, type = 'success') => {
+            const baseClass = 'p-4 border-l-4 rounded-r-lg';
+            if (type === 'error') {
+                return `<div class="${baseClass} border-red-500 bg-red-50 text-red-800">${message}</div>`;
+            }
+            return `<div class="${baseClass} border-green-500 bg-green-50 text-gray-800">${message}</div>`;
+        };
+
+        const toggleCreateButtonLoading = (isLoading) => {
+            createPackageBtn.disabled = isLoading;
+            if(isLoading) {
+                createBtnText.classList.add('hidden');
+                createBtnSpinner.classList.remove('hidden');
+            } else {
+                createBtnText.classList.remove('hidden');
+                createBtnSpinner.classList.add('hidden');
+            }
+        };
+
+        // --- Firebase Logic ---
+        const listenForRecentParcels = () => {
+            db.collection("parcels").orderBy("createdAt", "desc").limit(5)
+              .onSnapshot((querySnapshot) => {
+                recentParcelsContainer.innerHTML = '';
+                if (querySnapshot.empty) {
+                     recentParcelsContainer.innerHTML = '<p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Записей пока нет. Создайте первую!</p>';
+                     return;
+                }
+                const list = document.createElement('ul');
+                list.className = 'space-y-3';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const item = document.createElement('li');
+                    item.className = 'bg-gray-50 p-3 rounded-md border border-gray-200';
+                    item.innerHTML = `
+                        <p class="font-bold text-gray-800">${data.clientName}</p>
+                        <p class="text-sm text-gray-600">Код: <span class="font-mono bg-gray-200 px-1 rounded">${data.trackingId}</span></p>
+                        <p class="text-sm text-gray-600">Статус: ${data.status}</p>
+                    `;
+                    list.appendChild(item);
+                });
+                recentParcelsContainer.appendChild(list);
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                showAdminMessage("Ошибка прослушивания базы: " + error.message, false);
+            });
+        };
+
+        const createPackage = async () => {
+            if (!newTrackingIdInput.value.trim() || !clientNameInput.value.trim()) {
+                showAdminMessage("Заполните Код отслеживания и ФИО клиента.", false);
+                return;
+            }
+            toggleCreateButtonLoading(true);
+
+            try {
+                await db.collection("parcels").add({
+                    trackingId: newTrackingIdInput.value.trim().toUpperCase(),
+                    clientName: clientNameInput.value.trim(),
+                    status: statusInput.value.trim() || 'В обработке',
+                    details: detailsInput.value.trim(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showAdminMessage(`Посылка для ${clientNameInput.value} успешно создана!`, true);
+                newTrackingIdInput.value = '';
+                clientNameInput.value = '';
+                statusInput.value = 'В пути';
+                detailsInput.value = '';
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showAdminMessage("Ошибка создания: " + error.message, false);
+            } finally {
+                toggleCreateButtonLoading(false);
+            }
+        };
+        
+        const trackPackage = async () => {
+             if (!trackingIdInput.value.trim()) {
+                statusContainer.innerHTML = formatStatusMessage('Пожалуйста, введите номер для отслеживания.', 'error');
+                return;
+            }
+            statusContainer.innerHTML = `<div class="flex justify-center items-center"><svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Поиск...</span></div>`;
+
+            try {
+                const querySnapshot = await db.collection("parcels").where("trackingId", "==", trackingIdInput.value.trim().toUpperCase()).get();
+                
+                if (querySnapshot.empty) {
+                    statusContainer.innerHTML = formatStatusMessage(`Отправление <strong>${trackingIdInput.value.toUpperCase()}</strong> не найдено.`, 'error');
+                } else {
+                    const data = querySnapshot.docs[0].data();
+                    statusContainer.innerHTML = formatStatusMessage(`
+                        <h3 class="font-bold text-green-800 text-xl mb-2">Статус для: ${data.clientName}</h3>
+                        <p><strong>Номер:</strong> ${data.trackingId}</p>
+                        <p><strong>Статус:</strong> ${data.status}</p>
+                        <p class="mt-2"><strong>Детали:</strong> ${data.details}</p>
+                    `, 'success');
+                }
+            } catch (error) {
+                 statusContainer.innerHTML = formatStatusMessage(`Ошибка поиска: ${error.message}`, 'error');
+            }
+        };
+
+        // --- Initialization ---
+        const initializeApp = () => {
+             try {
+                console.log("Initializing Firebase...");
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log("Firestore initialized.");
+                
+                // --- Show/Hide Admin Panel ---
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('admin') === 'true') {
+                    adminPanel.classList.remove('hidden');
+                }
+                
+                // Set up listeners
+                createPackageBtn.addEventListener('click', createPackage);
+                trackPackageBtn.addEventListener('click', trackPackage);
+                
+                // Start listening for real-time updates
+                listenForRecentParcels();
+
+            } catch (error) {
+                console.error("FATAL: Firebase initialization failed", error);
+                const adminContainer = document.getElementById('adminPanel');
+                adminContainer.innerHTML = '<p class="text-center text-red-500 bg-red-50 p-4 rounded-lg">КРИТИЧЕСКАЯ ОШИБКА: Не удалось инициализировать Firebase. Проверьте конфигурацию в коде.</p>';
+                adminContainer.classList.remove('hidden');
+            }
+        };
+
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
