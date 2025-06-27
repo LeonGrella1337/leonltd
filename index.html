@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Отслеживание и Управление - DHL</title>
+    <title>Track and Manage - DHL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDKs - Classic Import -->
@@ -18,6 +18,7 @@
         .btn-admin { background-color: #D40511; color: white; font-weight: 700; transition: background-color 0.3s; }
         .btn-admin:hover:not(:disabled) { background-color: #a8040d; }
         .btn-admin:disabled { background-color: #f87171; cursor: not-allowed; }
+        .footer-link { @apply text-gray-600 hover:text-red-600 transition-colors duration-200; }
         .hidden { display: none; }
     </style>
 </head>
@@ -28,9 +29,9 @@
         <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="dhl-brand px-3 py-1 text-3xl font-extrabold tracking-tighter rounded">DHL</div>
             <div class="hidden md:flex space-x-6 items-center">
-                <a href="#" class="text-gray-600 hover:text-red-600 font-medium">Экспресс</a>
-                <a href="#" class="text-gray-600 hover:text-red-600 font-medium">Логистика</a>
-                <a href="#" class="text-gray-600 hover:text-red-600 font-medium">Поддержка</a>
+                <a href="https://www.dhl.com/global-en/home/our-divisions/express.html" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-red-600 font-medium">Express</a>
+                <a href="https://www.dhl.com/global-en/home/our-divisions.html" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-red-600 font-medium">Logistics</a>
+                <a href="https://www.dhl.com/global-en/home/contact-us.html" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-red-600 font-medium">Support</a>
             </div>
         </nav>
     </header>
@@ -39,40 +40,40 @@
     <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
         <!-- Client Tracking Section -->
         <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Отследить ваше отправление</h1>
-            <p class="text-gray-500 mb-6">Введите персональный номер для отслеживания.</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Track Your Shipment</h1>
+            <p class="text-gray-500 mb-6">Enter your personal tracking number.</p>
             <div class="space-y-4">
-                <textarea id="trackingIdInput" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition" placeholder="Например: PETROV777MSK"></textarea>
-                <button id="trackPackageBtn" class="w-full btn-dhl py-3 rounded-lg text-lg">Отследить</button>
+                <textarea id="trackingIdInput" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition" placeholder="e.g., PETROV777MSK"></textarea>
+                <button id="trackPackageBtn" class="w-full btn-dhl py-3 rounded-lg text-lg">Track</button>
             </div>
             <div id="statusContainer" class="mt-8"></div>
         </div>
 
         <!-- Admin Panel Section - Hidden by default -->
         <div id="adminPanel" class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-12 border-t-4 border-red-600 hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Панель администратора: Создать посылку</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Admin Panel: Create Parcel</h2>
             <div id="adminMessageContainer" class="p-3 rounded-lg mb-4 text-center border-l-4 hidden"></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="newTrackingId" class="block text-sm font-medium text-gray-700">Код отслеживания</label>
+                    <label for="newTrackingId" class="block text-sm font-medium text-gray-700">Tracking Code</label>
                     <input type="text" id="newTrackingId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
                 </div>
                 <div>
-                    <label for="clientName" class="block text-sm font-medium text-gray-700">ФИО клиента</label>
+                    <label for="clientName" class="block text-sm font-medium text-gray-700">Client's Full Name</label>
                     <input type="text" id="clientName" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
                 </div>
                 <div class="md:col-span-2">
-                    <label for="status" class="block text-sm font-medium text-gray-700">Статус</label>
-                    <input type="text" id="status" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" value="В пути">
+                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <input type="text" id="status" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" value="In transit">
                 </div>
                 <div class="md:col-span-2">
-                    <label for="details" class="block text-sm font-medium text-gray-700">Дополнительная информация</label>
-                    <textarea id="details" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" placeholder="Например: Вес: 2.5 кг, Направление: Москва - Санкт-Петербург"></textarea>
+                    <label for="details" class="block text-sm font-medium text-gray-700">Additional Information</label>
+                    <textarea id="details" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" placeholder="e.g., Weight: 2.5 kg, Route: Moscow - St. Petersburg"></textarea>
                 </div>
             </div>
             <div class="mt-6">
                 <button id="createPackageBtn" class="w-full btn-admin py-3 rounded-lg text-lg flex justify-center items-center">
-                    <span id="createBtnText">Создать запись</span>
+                    <span id="createBtnText">Create Record</span>
                     <svg id="createBtnSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -81,13 +82,106 @@
             </div>
 
             <div class="mt-8 border-t pt-6">
-                <h3 class="text-xl font-semibold text-gray-700 mb-3">Последние созданные посылки</h3>
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">Recently Created Parcels</h3>
                 <div id="recentParcelsContainer">
-                     <p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Подключение к базе данных...</p>
+                     <p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Connecting to the database...</p>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <!-- Top Footer Section -->
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="font-bold text-red-700 mb-4">Quick Links</h3>
+                    <ul class="space-y-3">
+                        <li><a href="https://www.dhl.com/global-en/home/contact-us.html" target="_blank" rel="noopener noreferrer" class="footer-link">Customer Service</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/login.html" target="_blank" rel="noopener noreferrer" class="footer-link">Customer Portal Logins</a></li>
+                        <li><a href="#" class="footer-link">Strategic Partner Directory</a></li>
+                        <li><a href="https://developer.dhl.com/" target="_blank" rel="noopener noreferrer" class="footer-link">Developer Portal</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/get-a-quote.html" target="_blank" rel="noopener noreferrer" class="footer-link">Get a Quote</a></li>
+                        <li><a href="#" class="footer-link">Request a Business Account</a></li>
+                        <li><a href="#" class="footer-link">DHL for Your Business</a></li>
+                    </ul>
+                </div>
+                <!-- Our Divisions -->
+                <div>
+                    <h3 class="font-bold text-red-700 mb-4">Our Divisions</h3>
+                    <ul class="space-y-3">
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/express.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL Express</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/global-forwarding.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL Global Forwarding</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL Supply Chain</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/ecommerce.html" target="_blank" rel="noopener noreferrer" class="footer-link">DHL eCommerce</a></li>
+                        <li><a href="#" class="footer-link">Other Global Divisions</a></li>
+                    </ul>
+                </div>
+                <!-- Industry Sectors -->
+                <div>
+                    <h3 class="font-bold text-red-700 mb-4">Industry Sectors</h3>
+                    <ul class="space-y-3">
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/automotive.html" target="_blank" rel="noopener noreferrer" class="footer-link">Auto-Mobility</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/global-forwarding/energy.html" target="_blank" rel="noopener noreferrer" class="footer-link">Energy</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/engineering-manufacturing.html" target="_blank" rel="noopener noreferrer" class="footer-link">Engineering and Manufacturing</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/life-sciences-healthcare.html" target="_blank" rel="noopener noreferrer" class="footer-link">Life Sciences and Healthcare</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/retail.html" target="_blank" rel="noopener noreferrer" class="footer-link">Retail and Fashion</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/our-divisions/supply-chain/technology.html" target="_blank" rel="noopener noreferrer" class="footer-link">Technology</a></li>
+                    </ul>
+                </div>
+                <!-- Company Information -->
+                <div>
+                    <h3 class="font-bold text-red-700 mb-4">Company Information</h3>
+                    <ul class="space-y-3">
+                        <li><a href="https://www.dhl.com/global-en/home/about-us.html" target="_blank" rel="noopener noreferrer" class="footer-link">About DHL</a></li>
+                        <li><a href="#" class="footer-link">Delivered Magazine</a></li>
+                        <li><a href="https://careers.dhl.com/" target="_blank" rel="noopener noreferrer" class="footer-link">Careers</a></li>
+                        <li><a href="https://group.dhl.com/en/media-relations/press-releases.html" target="_blank" rel="noopener noreferrer" class="footer-link">Press Center</a></li>
+                        <li><a href="https://www.dpdhl.com/en/investors.html" target="_blank" rel="noopener noreferrer" class="footer-link">Investors</a></li>
+                        <li><a href="https://www.dhl.com/global-en/home/about-us/sustainability.html" target="_blank" rel="noopener noreferrer" class="footer-link">Sustainability</a></li>
+                        <li><a href="#" class="footer-link">Supplier Diversity</a></li>
+                        <li><a href="#" class="footer-link">Innovation</a></li>
+                        <li><a href="#" class="footer-link">Events</a></li>
+                        <li><a href="#" class="footer-link">Brand Partnerships</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Bottom Footer Section -->
+        <div class="bg-gray-100">
+            <div class="container mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600 space-y-4 md:space-y-0">
+                <div>
+                    <p class="mb-2">2025 &copy; - all rights reserved</p>
+                </div>
+                <div class="flex flex-wrap justify-center space-x-4">
+                     <a href="https://www.dhl.com/global-en/home/footer/fraud-awareness.html" target="_blank" rel="noopener noreferrer" class="footer-link">Fraud Awareness</a>
+                     <a href="https://www.dhl.com/global-en/home/footer/legal-notice.html" target="_blank" rel="noopener noreferrer" class="footer-link">Legal Notice</a>
+                     <a href="https://www.dhl.com/global-en/home/footer/terms-of-use.html" target="_blank" rel="noopener noreferrer" class="footer-link">Terms of Use</a>
+                     <a href="https://www.dhl.com/global-en/home/footer/privacy-notice.html" target="_blank" rel="noopener noreferrer" class="footer-link">Privacy Notice</a>
+                     <a href="#" class="footer-link">Dispute Resolution</a>
+                     <a href="#" class="footer-link">Additional Information</a>
+                     <a href="#" class="footer-link">Cookie Settings</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="font-semibold hidden sm:inline">Follow Us</span>
+                    <a href="https://www.youtube.com/user/dhl" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="text-gray-500 hover:text-red-600">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10,15L15.19,12L10,9V15M21.56,7.17C21.69,7.64 21.78,8.27 21.84,9.07C21.91,9.87 21.94,10.56 21.94,11.16L22,12C22,14.19 21.84,15.8 21.56,16.83C21.31,17.73 20.73,18.31 19.83,18.56C19.36,18.69 18.73,18.78 17.93,18.84C17.13,18.91 16.44,18.94 15.84,18.94L15,19C12.81,19 11.2,18.84 10.17,18.56C9.27,18.31 8.69,17.73 8.44,16.83C8.31,16.36 8.22,15.73 8.16,14.93C8.09,14.13 8.06,13.44 8.06,12.84L8,12C8,9.81 8.16,8.2 8.44,7.17C8.69,6.27 9.27,5.69 10.17,5.44C10.64,5.31 11.27,5.22 12.07,5.16C12.87,5.09 13.56,5.06 14.16,5.06L15,5C17.19,5 18.8,5.16 19.83,5.44C20.73,5.69 21.31,6.27 21.56,7.17Z"></path></svg>
+                    </a>
+                    <a href="https://www.facebook.com/dhl" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="text-gray-500 hover:text-red-600">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.32 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z"></path></svg>
+                    </a>
+                    <a href="https://www.linkedin.com/company/dhl" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-gray-500 hover:text-red-600">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V5A2 2 0 0 1 5 3H19M18.5 18.5V13.2A3.26 3.26 0 0 0 15.24 9.94C14.39 9.94 13.4 10.46 13 11.11V10.28H10.13V18.5H13V13.07C13 11.94 13.44 11.04 14.71 11.04C15.94 11.04 16.4 12 16.4 13.3V18.5H18.5M6.88 8.56A1.68 1.68 0 0 0 8.56 6.88C8.56 6 8 5.44 7.19 5.44C6.38 5.44 5.79 6 5.79 6.88C5.79 7.77 6.38 8.56 6.88 8.56M8.27 18.5V10.28H5.39V18.5H8.27Z"></path></svg>
+                    </a>
+                    <a href="https://www.instagram.com/dhl_global/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-gray-500 hover:text-red-600">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M7.6,4A3.6,3.6 0 0,0 4,7.6V16.4C4,18.39 5.61,20 7.6,20H16.4A3.6,3.6 0 0,0 20,16.4V7.6C20,5.61 18.39,4 16.4,4H7.6M17.25,5.5A1.25,1.25 0 0,1 18.5,6.75A1.25,1.25 0 0,1 17.25,8A1.25,1.25 0 0,1 16,6.75A1.25,1.25 0 0,1 17.25,5.5M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -157,7 +251,7 @@
               .onSnapshot((querySnapshot) => {
                 recentParcelsContainer.innerHTML = '';
                 if (querySnapshot.empty) {
-                     recentParcelsContainer.innerHTML = '<p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">Записей пока нет. Создайте первую!</p>';
+                     recentParcelsContainer.innerHTML = '<p class="text-center text-gray-500 bg-gray-50 p-4 rounded-lg">No records yet. Create the first one!</p>';
                      return;
                 }
                 const list = document.createElement('ul');
@@ -168,21 +262,21 @@
                     item.className = 'bg-gray-50 p-3 rounded-md border border-gray-200';
                     item.innerHTML = `
                         <p class="font-bold text-gray-800">${data.clientName}</p>
-                        <p class="text-sm text-gray-600">Код: <span class="font-mono bg-gray-200 px-1 rounded">${data.trackingId}</span></p>
-                        <p class="text-sm text-gray-600">Статус: ${data.status}</p>
+                        <p class="text-sm text-gray-600">Code: <span class="font-mono bg-gray-200 px-1 rounded">${data.trackingId}</span></p>
+                        <p class="text-sm text-gray-600">Status: ${data.status}</p>
                     `;
                     list.appendChild(item);
                 });
                 recentParcelsContainer.appendChild(list);
             }, (error) => {
                 console.error("Snapshot error:", error);
-                showAdminMessage("Ошибка прослушивания базы: " + error.message, false);
+                showAdminMessage("Error listening to the database: " + error.message, false);
             });
         };
 
         const createPackage = async () => {
             if (!newTrackingIdInput.value.trim() || !clientNameInput.value.trim()) {
-                showAdminMessage("Заполните Код отслеживания и ФИО клиента.", false);
+                showAdminMessage("Please fill in Tracking Code and Client's Full Name.", false);
                 return;
             }
             toggleCreateButtonLoading(true);
@@ -191,20 +285,20 @@
                 await db.collection("parcels").add({
                     trackingId: newTrackingIdInput.value.trim().toUpperCase(),
                     clientName: clientNameInput.value.trim(),
-                    status: statusInput.value.trim() || 'В обработке',
+                    status: statusInput.value.trim() || 'Processing',
                     details: detailsInput.value.trim(),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showAdminMessage(`Посылка для ${clientNameInput.value} успешно создана!`, true);
+                showAdminMessage(`Parcel for ${clientNameInput.value} created successfully!`, true);
                 newTrackingIdInput.value = '';
                 clientNameInput.value = '';
-                statusInput.value = 'В пути';
+                statusInput.value = 'In transit';
                 detailsInput.value = '';
 
             } catch (error) {
                 console.error("Error adding document: ", error);
-                showAdminMessage("Ошибка создания: " + error.message, false);
+                showAdminMessage("Creation Error: " + error.message, false);
             } finally {
                 toggleCreateButtonLoading(false);
             }
@@ -212,27 +306,27 @@
         
         const trackPackage = async () => {
              if (!trackingIdInput.value.trim()) {
-                statusContainer.innerHTML = formatStatusMessage('Пожалуйста, введите номер для отслеживания.', 'error');
+                statusContainer.innerHTML = formatStatusMessage('Please enter a tracking number.', 'error');
                 return;
             }
-            statusContainer.innerHTML = `<div class="flex justify-center items-center"><svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Поиск...</span></div>`;
+            statusContainer.innerHTML = `<div class="flex justify-center items-center"><svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Searching...</span></div>`;
 
             try {
                 const querySnapshot = await db.collection("parcels").where("trackingId", "==", trackingIdInput.value.trim().toUpperCase()).get();
                 
                 if (querySnapshot.empty) {
-                    statusContainer.innerHTML = formatStatusMessage(`Отправление <strong>${trackingIdInput.value.toUpperCase()}</strong> не найдено.`, 'error');
+                    statusContainer.innerHTML = formatStatusMessage(`Shipment <strong>${trackingIdInput.value.toUpperCase()}</strong> not found.`, 'error');
                 } else {
                     const data = querySnapshot.docs[0].data();
                     statusContainer.innerHTML = formatStatusMessage(`
-                        <h3 class="font-bold text-green-800 text-xl mb-2">Статус для: ${data.clientName}</h3>
-                        <p><strong>Номер:</strong> ${data.trackingId}</p>
-                        <p><strong>Статус:</strong> ${data.status}</p>
-                        <p class="mt-2"><strong>Детали:</strong> ${data.details}</p>
+                        <h3 class="font-bold text-green-800 text-xl mb-2">Status for: ${data.clientName}</h3>
+                        <p><strong>Number:</strong> ${data.trackingId}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p class="mt-2"><strong>Details:</strong> ${data.details}</p>
                     `, 'success');
                 }
             } catch (error) {
-                 statusContainer.innerHTML = formatStatusMessage(`Ошибка поиска: ${error.message}`, 'error');
+                 statusContainer.innerHTML = formatStatusMessage(`Search Error: ${error.message}`, 'error');
             }
         };
 
@@ -260,7 +354,7 @@
             } catch (error) {
                 console.error("FATAL: Firebase initialization failed", error);
                 const adminContainer = document.getElementById('adminPanel');
-                adminContainer.innerHTML = '<p class="text-center text-red-500 bg-red-50 p-4 rounded-lg">КРИТИЧЕСКАЯ ОШИБКА: Не удалось инициализировать Firebase. Проверьте конфигурацию в коде.</p>';
+                adminContainer.innerHTML = '<p class="text-center text-red-500 bg-red-50 p-4 rounded-lg">CRITICAL ERROR: Could not initialize Firebase. Check your configuration in the code.</p>';
                 adminContainer.classList.remove('hidden');
             }
         };
