@@ -44,14 +44,14 @@
         }
         .total-display {
             font-weight: 900;
-            font-size: 6rem;
+            font-size: 5rem;
             line-height: 1;
             color: #FBBF24;
             text-shadow: 0 0 10px #FBBF24, 0 0 20px #FBBF24, 0 0 30px rgba(0,0,0,0.5);
         }
         @media (max-width: 768px) {
             .total-display {
-                font-size: 4rem;
+                font-size: 3.5rem;
             }
         }
         .input-field {
@@ -79,6 +79,18 @@
         .delete-button:hover {
             background-color: #dc2626;
         }
+        .day-input {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: right;
+        }
+        .progress-bar-bg {
+            background-color: rgba(0,0,0,0.3);
+        }
+        .progress-bar-fill {
+            background-color: #FBBF24;
+            transition: width 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-900">
@@ -88,7 +100,7 @@
 
     <!-- Main content container -->
     <div class="content-container min-h-screen flex items-center justify-center p-4">
-        <div class="w-full max-w-2xl text-center">
+        <div class="w-full max-w-4xl text-center">
             
             <!-- Header -->
             <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">
@@ -98,48 +110,77 @@
 
             <!-- Main Panel -->
             <div class="glass-panel rounded-2xl p-6 md:p-10 shadow-2xl">
-                
-                <!-- Total Display -->
-                <h2 class="text-2xl font-medium text-gray-200 mb-4">ОБЩИЙ ТОТАЛ</h2>
-                <div id="total-display" class="total-display mb-8">
-                    <div class="animate-pulse">...</div> <!-- Loading state -->
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                <!-- Update Section -->
-                <div class="max-w-sm mx-auto">
-                    <label for="total-input" class="block text-sm font-medium text-gray-300 mb-2">Обновить тотал</label>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="number" id="total-input" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Введите новое значение">
-                        <button id="update-button" class="action-button font-bold px-6 py-3 rounded-lg shadow-lg w-full sm:w-auto flex-shrink-0">
-                            Обновить
-                        </button>
-                    </div>
-                    <div id="message-box" class="text-green-400 mt-4 h-5"></div>
-                </div>
-
-                <!-- Divider -->
-                <hr class="border-gray-700 my-8">
-
-                <!-- Pledges Section -->
-                <div>
-                    <h3 class="text-2xl font-medium text-gray-200 mb-4">ЗАЛОГИ</h3>
-                    
-                    <!-- Add Pledge Form -->
-                    <div class="max-w-sm mx-auto mb-6">
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <input type="text" id="pledge-name-input" class="input-field w-full px-4 py-3 rounded-lg text-white" placeholder="Имя">
-                            <input type="number" id="pledge-amount-input" class="input-field w-full px-4 py-3 rounded-lg text-white" placeholder="Сумма">
+                    <!-- Left Column: Totals & Goal -->
+                    <div class="flex flex-col gap-8">
+                        <!-- Grand Total -->
+                        <div>
+                            <h2 class="text-2xl font-medium text-gray-200 mb-4">ОБЩИЙ ТОТАЛ</h2>
+                            <div id="total-display" class="total-display">
+                                <div class="animate-pulse">...</div> <!-- Loading state -->
+                            </div>
                         </div>
-                        <button id="add-pledge-button" class="action-button font-bold px-6 py-3 rounded-lg shadow-lg w-full mt-3">
-                            Добавить залог
-                        </button>
+                        
+                        <!-- Goal Section -->
+                        <div>
+                            <h3 class="text-2xl font-medium text-gray-200 mb-4">ЦЕЛЬ ПО ТОТАЛУ</h3>
+                            <div class="px-2">
+                                <div class="flex justify-between items-end mb-1 text-gray-300">
+                                    <span class="text-sm">Прогресс</span>
+                                    <span class="font-bold text-lg" id="goal-amount-display">...</span>
+                                </div>
+                                <div class="progress-bar-bg w-full rounded-full h-4 shadow-inner">
+                                    <div id="progress-bar" class="progress-bar-fill h-4 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <div class="text-right mt-1 text-amber-400 font-medium">
+                                    <span id="remaining-amount-display">...</span>
+                                </div>
+                                <div class="mt-4 flex gap-2">
+                                    <input type="number" id="goal-input" class="input-field w-full px-4 py-2 rounded-lg text-white" placeholder="Установить цель">
+                                    <button id="update-goal-button" class="action-button font-bold px-5 py-2 rounded-lg shadow-lg">OK</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily Totals -->
+                        <div>
+                            <h3 class="text-2xl font-medium text-gray-200 mb-4 mt-4">ДНЕВНОЙ ТОТАЛ</h3>
+                            <div id="daily-totals-container" class="space-y-3">
+                                <!-- Daily inputs will be generated here -->
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Pledges List -->
-                    <div id="pledges-list" class="space-y-3 text-left">
-                        <!-- Pledge items will be dynamically inserted here -->
+
+                    <!-- Right Column: Pledges -->
+                    <div>
+                        <h3 class="text-2xl font-medium text-gray-200 mb-4">ЗАЛОГИ</h3>
+                        
+                        <!-- Add Pledge Form -->
+                        <div class="max-w-sm mx-auto mb-6">
+                            <div class="flex flex-col gap-3">
+                                <input type="text" id="pledge-name-input" class="input-field w-full px-4 py-3 rounded-lg text-white" placeholder="Имя или название залога">
+                            </div>
+                            <button id="add-pledge-button" class="action-button font-bold px-6 py-3 rounded-lg shadow-lg w-full mt-3">
+                                Добавить залог
+                            </button>
+                        </div>
+                        
+                        <!-- Pledges List -->
+                        <div id="pledges-list" class="space-y-3 text-left max-h-60 overflow-y-auto pr-2">
+                            <!-- Pledge items will be inserted here -->
+                        </div>
+                        
+                        <!-- Pledges Total -->
+                        <div class="mt-4 pt-4 border-t border-gray-700">
+                             <div class="flex justify-between items-center text-xl font-bold">
+                                 <span>Количество залогов:</span>
+                                 <span id="pledges-total" class="text-amber-400">0</span>
+                             </div>
+                        </div>
                     </div>
                 </div>
+                 <div id="message-box" class="text-green-400 mt-6 h-5 text-center"></div>
             </div>
              <!-- User ID Display -->
             <div class="mt-8 text-center">
@@ -154,24 +195,33 @@
         // Import necessary Firebase functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIGURATION ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "...", projectId: "..." };
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-kiev-central-app';
         const docId = "main_total";
         const collectionPath = `/artifacts/${appId}/public/data/team_data`;
+        const DAYS = {
+            mon: "Понедельник", tue: "Вторник", wed: "Среда",
+            thu: "Четверг", fri: "Пятница", sat: "Суббота"
+        };
 
         // --- UI ELEMENTS ---
         const totalDisplay = document.getElementById('total-display');
-        const totalInput = document.getElementById('total-input');
-        const updateButton = document.getElementById('update-button');
         const messageBox = document.getElementById('message-box');
         const userIdDisplay = document.getElementById('user-id');
         const addPledgeButton = document.getElementById('add-pledge-button');
         const pledgeNameInput = document.getElementById('pledge-name-input');
-        const pledgeAmountInput = document.getElementById('pledge-amount-input');
         const pledgesList = document.getElementById('pledges-list');
+        const pledgesTotalDisplay = document.getElementById('pledges-total');
+        const dailyTotalsContainer = document.getElementById('daily-totals-container');
+        const goalAmountDisplay = document.getElementById('goal-amount-display');
+        const progressBar = document.getElementById('progress-bar');
+        const remainingAmountDisplay = document.getElementById('remaining-amount-display');
+        const goalInput = document.getElementById('goal-input');
+        const updateGoalButton = document.getElementById('update-goal-button');
+
 
         // --- FIREBASE INITIALIZATION ---
         let db, auth, userId;
@@ -207,10 +257,10 @@
                 totalDisplay.textContent = "Ошибка";
             }
         }
+        
+        // --- DATA HANDLING & RENDERING ---
 
-        // --- FIRESTORE LOGIC ---
-
-        // Listen for all real-time updates
+        // Listen for all real-time updates from Firestore
         async function listenForUpdates() {
             if (!db || !userId) return;
             if (unsubscribe) unsubscribe();
@@ -220,17 +270,24 @@
             unsubscribe = onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    // Update total
-                    const total = data.totalValue || 0;
-                    totalDisplay.textContent = new Intl.NumberFormat('ru-RU').format(total);
-                    // Update pledges
+                    const dailyTotals = data.dailyTotals || {};
                     const pledges = data.pledges || [];
+                    const totalGoal = data.totalGoal || 0;
+                    
+                    const grandTotal = Object.values(dailyTotals).reduce((sum, val) => sum + Number(val), 0);
+                    
+                    totalDisplay.textContent = new Intl.NumberFormat('ru-RU').format(grandTotal);
+                    displayDailyTotals(dailyTotals);
                     renderPledges(pledges);
+                    updateGoalUI(grandTotal, totalGoal);
+
                 } else {
-                    // Create document if it doesn't exist
-                    setDoc(docRef, { totalValue: 0, pledges: [] });
-                    totalDisplay.textContent = "0";
-                    renderPledges([]);
+                    const initialData = {
+                        dailyTotals: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0 },
+                        pledges: [],
+                        totalGoal: 0
+                    };
+                    setDoc(docRef, initialData);
                 }
             }, (error) => {
                 console.error("Error listening to document:", error);
@@ -238,97 +295,83 @@
             });
         }
         
-        // Render the list of pledges
-        function renderPledges(pledges) {
-            pledgesList.innerHTML = ''; // Clear current list
-            if (pledges.length === 0) {
-                pledgesList.innerHTML = '<p class="text-gray-400 text-center">Залогов пока нет.</p>';
-                return;
-            }
-            pledges.forEach(pledge => {
-                const pledgeEl = document.createElement('div');
-                pledgeEl.className = 'pledge-item p-3 rounded-lg flex justify-between items-center';
-                
-                const pledgeAmountFormatted = new Intl.NumberFormat('ru-RU').format(pledge.amount);
-                
-                pledgeEl.innerHTML = `
-                    <div>
-                        <span class="font-medium">${pledge.name}</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="font-bold text-amber-400">${pledgeAmountFormatted}</span>
-                        <button class="delete-button w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
-                    </div>
-                `;
-                
-                pledgeEl.querySelector('.delete-button').addEventListener('click', () => deletePledge(pledge));
-                pledgesList.appendChild(pledgeEl);
+        function displayDailyTotals(dailyData) {
+            Object.keys(DAYS).forEach(dayKey => {
+                const dayInput = document.getElementById(`${dayKey}-input`);
+                if (dayInput) {
+                    dayInput.value = dailyData[dayKey] || 0;
+                }
             });
         }
 
-        // Update the total value
-        async function updateTotal() {
-            if (!db || !userId) return;
-            const newValueStr = totalInput.value;
-            if (newValueStr === '') {
-                showMessage("Пожалуйста, введите значение.", "error");
-                return;
+        function renderPledges(pledges) {
+            pledgesList.innerHTML = '';
+            if (pledges.length === 0) {
+                pledgesList.innerHTML = '<p class="text-gray-400 text-center">Залогов пока нет.</p>';
+            } else {
+                pledges.forEach(pledge => {
+                    const pledgeEl = document.createElement('div');
+                    pledgeEl.className = 'pledge-item p-3 rounded-lg flex justify-between items-center';
+                    pledgeEl.innerHTML = `
+                        <span class="font-medium">${pledge.name}</span>
+                        <button class="delete-button w-8 h-8 rounded-full flex items-center justify-center">&times;</button>
+                    `;
+                    pledgeEl.querySelector('.delete-button').addEventListener('click', () => deletePledge(pledge));
+                    pledgesList.appendChild(pledgeEl);
+                });
             }
-            const newValue = parseInt(newValueStr, 10);
-            if (isNaN(newValue)) {
-                showMessage("Пожалуйста, введите число.", "error");
-                return;
-            }
+            pledgesTotalDisplay.textContent = pledges.length;
+        }
 
-            updateButton.disabled = true;
-            updateButton.textContent = "Обновление...";
+        function updateGoalUI(currentTotal, goal) {
+            goalAmountDisplay.textContent = `Цель: ${new Intl.NumberFormat('ru-RU').format(goal)}`;
             
-            const docRef = doc(db, collectionPath, docId);
-            try {
-                await setDoc(docRef, { totalValue: newValue }, { merge: true });
-                showMessage("Тотал успешно обновлен!", "success");
-                totalInput.value = '';
-            } catch (error) {
-                console.error("Error updating total: ", error);
-                showMessage("Ошибка при обновлении.", "error");
-            } finally {
-                updateButton.disabled = false;
-                updateButton.textContent = "Обновить";
+            if (goal > 0) {
+                const remaining = goal - currentTotal;
+                const progress = Math.min((currentTotal / goal) * 100, 100);
+                
+                progressBar.style.width = `${progress}%`;
+                
+                if (remaining > 0) {
+                    remainingAmountDisplay.textContent = `Осталось: ${new Intl.NumberFormat('ru-RU').format(remaining)}`;
+                } else {
+                    remainingAmountDisplay.textContent = `Цель достигнута!`;
+                }
+            } else {
+                progressBar.style.width = '0%';
+                remainingAmountDisplay.textContent = 'Цель не установлена';
             }
         }
         
-        // Add a new pledge
-        async function addPledge() {
+        // --- FIRESTORE UPDATE FUNCTIONS ---
+
+        async function updateDailyTotal(dayKey) {
             if (!db || !userId) return;
-            
-            const name = pledgeNameInput.value.trim();
-            const amountStr = pledgeAmountInput.value;
-            
-            if (!name || !amountStr) {
-                 showMessage("Заполните имя и сумму залога.", "error");
-                 return;
-            }
-            const amount = parseInt(amountStr, 10);
-            if (isNaN(amount)) {
-                showMessage("Сумма должна быть числом.", "error");
-                return;
-            }
-
-            const newPledge = {
-                id: crypto.randomUUID(),
-                name: name,
-                amount: amount
-            };
-            
-            addPledgeButton.disabled = true;
-
+            const input = document.getElementById(`${dayKey}-input`);
+            const newValue = parseInt(input.value, 10) || 0;
             const docRef = doc(db, collectionPath, docId);
             try {
-                await updateDoc(docRef, {
-                    pledges: arrayUnion(newPledge)
-                });
+                await updateDoc(docRef, { [`dailyTotals.${dayKey}`]: newValue });
+                showMessage(`Тотал за ${DAYS[dayKey]} обновлен.`, 'success');
+            } catch (error) {
+                console.error(`Error updating ${dayKey}:`, error);
+                showMessage('Ошибка обновления.', 'error');
+            }
+        }
+
+        async function addPledge() {
+            if (!db || !userId) return;
+            const name = pledgeNameInput.value.trim();
+            if (!name) {
+                 showMessage("Введите имя или название залога.", "error");
+                 return;
+            }
+            const newPledge = { id: crypto.randomUUID(), name };
+            addPledgeButton.disabled = true;
+            const docRef = doc(db, collectionPath, docId);
+            try {
+                await updateDoc(docRef, { pledges: arrayUnion(newPledge) });
                 pledgeNameInput.value = '';
-                pledgeAmountInput.value = '';
             } catch (error) {
                 console.error("Error adding pledge: ", error);
                 showMessage("Ошибка добавления залога.", "error");
@@ -337,67 +380,79 @@
             }
         }
         
-        // Delete a pledge
         async function deletePledge(pledgeObject) {
             if (!db || !userId) return;
-            
             const docRef = doc(db, collectionPath, docId);
             try {
-                await updateDoc(docRef, {
-                    pledges: arrayRemove(pledgeObject)
-                });
+                await updateDoc(docRef, { pledges: arrayRemove(pledgeObject) });
             } catch (error) {
                 console.error("Error deleting pledge: ", error);
                 showMessage("Ошибка удаления залога.", "error");
             }
         }
+
+        async function updateGoal() {
+            if (!db || !userId) return;
+            const newGoal = parseInt(goalInput.value, 10);
+            if (isNaN(newGoal) || newGoal < 0) {
+                showMessage("Введите корректное число для цели.", "error");
+                return;
+            }
+            const docRef = doc(db, collectionPath, docId);
+            try {
+                await updateDoc(docRef, { totalGoal: newGoal });
+                showMessage("Цель обновлена!", "success");
+                goalInput.value = '';
+            } catch (error) {
+                console.error("Error updating goal:", error);
+                showMessage("Ошибка обновления цели.", "error");
+            }
+        }
         
-        // Helper to show messages
+        // --- HELPERS & INITIALIZATION ---
+
         function showMessage(text, type = 'success') {
             messageBox.textContent = text;
-            messageBox.className = type === 'success' ? 'text-green-400 mt-4 h-5' : 'text-red-400 mt-4 h-5';
-            setTimeout(() => {
-                messageBox.textContent = '';
-            }, 3000);
+            messageBox.className = type === 'success' ? 'text-green-400 mt-6 h-5 text-center' : 'text-red-400 mt-6 h-5 text-center';
+            setTimeout(() => { messageBox.textContent = ''; }, 3000);
+        }
+
+        function createDailyInputs() {
+            Object.entries(DAYS).forEach(([key, name]) => {
+                const dayRow = document.createElement('div');
+                dayRow.className = 'flex items-center justify-between gap-3';
+                dayRow.innerHTML = `
+                    <label for="${key}-input" class="font-medium text-gray-300">${name}</label>
+                    <input type="number" id="${key}-input" class="day-input w-32 px-3 py-2 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-amber-400" value="0">
+                `;
+                dailyTotalsContainer.appendChild(dayRow);
+                document.getElementById(`${key}-input`).addEventListener('blur', () => updateDailyTotal(key));
+            });
         }
 
         // --- 3D BACKGROUND LOGIC (THREE.JS) ---
         let scene, camera, renderer, torus;
-
         function init3D() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({
-                canvas: document.getElementById('bg-canvas'),
-                antialias: true,
-            });
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-
             const geometry = new THREE.TorusKnotGeometry(10, 2, 100, 16);
-            const material = new THREE.MeshStandardMaterial({
-                color: 0xFBBF24,
-                metalness: 0.8,
-                roughness: 0.2,
-            });
+            const material = new THREE.MeshStandardMaterial({ color: 0xFBBF24, metalness: 0.8, roughness: 0.2 });
             torus = new THREE.Mesh(geometry, material);
             scene.add(torus);
-            
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
             scene.add(ambientLight);
-            
             const pointLight = new THREE.PointLight(0xffffff, 1);
             pointLight.position.set(25, 50, 25);
             scene.add(pointLight);
-
             camera.position.z = 35;
-
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
         }
-
         function animate() {
             requestAnimationFrame(animate);
             if (torus) {
@@ -407,19 +462,18 @@
             renderer.render(scene, camera);
         }
 
-        // --- EVENT LISTENERS & INITIALIZATION ---
+        // --- STARTUP ---
         document.addEventListener('DOMContentLoaded', () => {
             init3D();
             animate();
+            createDailyInputs();
             initFirebase();
             
-            updateButton.addEventListener('click', updateTotal);
-            totalInput.addEventListener('keydown', (e) => e.key === 'Enter' && updateTotal());
-            
             addPledgeButton.addEventListener('click', addPledge);
-            pledgeAmountInput.addEventListener('keydown', (e) => e.key === 'Enter' && addPledge());
+            pledgeNameInput.addEventListener('keydown', (e) => e.key === 'Enter' && addPledge());
+            updateGoalButton.addEventListener('click', updateGoal);
+            goalInput.addEventListener('keydown', (e) => e.key === 'Enter' && updateGoal());
         });
-
     </script>
 </body>
 </html>
