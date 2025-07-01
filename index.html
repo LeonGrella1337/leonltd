@@ -58,6 +58,10 @@
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        .input-field:disabled {
+            background: rgba(0,0,0,0.1);
+            cursor: not-allowed;
+        }
         .action-button {
             background-color: #FBBF24;
             color: #111827;
@@ -66,6 +70,13 @@
         .action-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        }
+        .action-button:disabled {
+            background-color: #52525b;
+            color: #a1a1aa;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .pledge-item {
             background: rgba(255, 255, 255, 0.05);
@@ -78,6 +89,10 @@
         }
         .delete-button:hover {
             background-color: #dc2626;
+        }
+        .delete-button:disabled {
+             background-color: #52525b;
+             cursor: not-allowed;
         }
         .day-input {
             background: rgba(0,0,0,0.2);
@@ -195,10 +210,11 @@
         // Import necessary Firebase functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIGURATION ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "...", projectId: "..." };
+        const fallbackConfig = { apiKey: "FALLBACK_KEY", authDomain: "...", projectId: "..." };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-kiev-central-app';
         const docId = "main_total";
         const collectionPath = `/artifacts/${appId}/public/data/team_data`;
@@ -222,21 +238,32 @@
         const goalInput = document.getElementById('goal-input');
         const updateGoalButton = document.getElementById('update-goal-button');
 
-
-        // --- FIREBASE INITIALIZATION ---
+        // --- APP STATE ---
         let db, auth, userId;
         let unsubscribe;
+        let isFirebaseReady = false;
 
+        // --- FIREBASE INITIALIZATION ---
         async function initFirebase() {
+             if (typeof __firebase_config === 'undefined' || firebaseConfig.apiKey === "FALLBACK_KEY") {
+                console.error("Firebase config is missing or is a placeholder.");
+                displayConnectionError("Ошибка конфигурации. Данные не будут загружены.");
+                disableInputs();
+                return;
+            }
+
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                setLogLevel('debug');
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
                         userIdDisplay.textContent = userId;
+                        isFirebaseReady = true;
+                        enableInputs();
                         await listenForUpdates();
                     } else {
                         userIdDisplay.textContent = 'Ожидание авторизации...';
@@ -248,21 +275,21 @@
                            }
                         } catch (error) {
                            console.error("Anonymous sign-in failed:", error);
-                           userIdDisplay.textContent = 'Ошибка авторизации';
+                           displayConnectionError("Ошибка авторизации. Обновите страницу.");
+                           disableInputs();
                         }
                     }
                 });
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                totalDisplay.textContent = "Ошибка";
+                displayConnectionError("Ошибка подключения к базе данных.");
+                disableInputs();
             }
         }
         
         // --- DATA HANDLING & RENDERING ---
-
-        // Listen for all real-time updates from Firestore
         async function listenForUpdates() {
-            if (!db || !userId) return;
+            if (!isFirebaseReady) return;
             if (unsubscribe) unsubscribe();
 
             const docRef = doc(db, collectionPath, docId);
@@ -291,7 +318,7 @@
                 }
             }, (error) => {
                 console.error("Error listening to document:", error);
-                totalDisplay.textContent = "Ошибка";
+                displayConnectionError("Ошибка при получении данных.");
             });
         }
         
@@ -344,9 +371,8 @@
         }
         
         // --- FIRESTORE UPDATE FUNCTIONS ---
-
         async function updateDailyTotal(dayKey) {
-            if (!db || !userId) return;
+            if (!isFirebaseReady) return;
             const input = document.getElementById(`${dayKey}-input`);
             const newValue = parseInt(input.value, 10) || 0;
             const docRef = doc(db, collectionPath, docId);
@@ -360,7 +386,7 @@
         }
 
         async function addPledge() {
-            if (!db || !userId) return;
+            if (!isFirebaseReady) return;
             const name = pledgeNameInput.value.trim();
             if (!name) {
                  showMessage("Введите имя или название залога.", "error");
@@ -381,7 +407,7 @@
         }
         
         async function deletePledge(pledgeObject) {
-            if (!db || !userId) return;
+            if (!isFirebaseReady) return;
             const docRef = doc(db, collectionPath, docId);
             try {
                 await updateDoc(docRef, { pledges: arrayRemove(pledgeObject) });
@@ -392,7 +418,7 @@
         }
 
         async function updateGoal() {
-            if (!db || !userId) return;
+            if (!isFirebaseReady) return;
             const newGoal = parseInt(goalInput.value, 10);
             if (isNaN(newGoal) || newGoal < 0) {
                 showMessage("Введите корректное число для цели.", "error");
@@ -409,12 +435,25 @@
             }
         }
         
-        // --- HELPERS & INITIALIZATION ---
-
+        // --- HELPERS & UI STATE ---
         function showMessage(text, type = 'success') {
             messageBox.textContent = text;
             messageBox.className = type === 'success' ? 'text-green-400 mt-6 h-5 text-center' : 'text-red-400 mt-6 h-5 text-center';
             setTimeout(() => { messageBox.textContent = ''; }, 3000);
+        }
+
+        function displayConnectionError(message) {
+            totalDisplay.textContent = "Ошибка";
+            messageBox.textContent = message;
+            messageBox.className = 'text-red-400 mt-6 h-5 text-center';
+        }
+
+        function disableInputs() {
+            document.querySelectorAll('input, button').forEach(el => el.disabled = true);
+        }
+
+        function enableInputs() {
+            document.querySelectorAll('input, button').forEach(el => el.disabled = false);
         }
 
         function createDailyInputs() {
@@ -467,6 +506,7 @@
             init3D();
             animate();
             createDailyInputs();
+            disableInputs(); // Disable inputs until Firebase is ready
             initFirebase();
             
             addPledgeButton.addEventListener('click', addPledge);
